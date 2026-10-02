@@ -56,7 +56,7 @@ details{margin-top:9px;border-top:1px solid var(--line);padding-top:7px}summary{
   <div class="lay">
     <input type="checkbox" id="L_sat" checked><label for="L_sat">Satellite imagery</label>
     <input type="checkbox" id="L_rel"><label for="L_rel">Lidar relief</label>
-    <select id="lidar" class="wide" title="which lidar the hillshade is made from"><option value="v3">Corrected lidar (v5)</option><option value="orig">Original lidar (2018)</option></select>
+    <select id="lidar" class="wide" title="which lidar the hillshade is made from"><option value="v3">Corrected lidar</option><option value="orig">Original lidar (2018)</option></select>
     <input type="checkbox" id="L_mod" checked><label for="L_mod" id="L_modlbl" title="show or hide the colours of the Variable chosen above (model results or a static lidar map)">Model values</label>
     <input type="checkbox" id="outl" checked><label for="outl">Cell boundaries</label>
     <input type="checkbox" id="lbl" checked><label for="lbl">Cell numbers</label>
@@ -124,7 +124,7 @@ const VARS={icm:{salinity:{name:"Salinity",unit:"ppt",key:"salinity",lo:0,hi:35,
   currents:{name:"Currents, depth-averaged",unit:"m/s"}}};
 // static maps from the 2.2 x 2.5 m lidar grids (they do not change with the date)
 const STATIC={elev3:{name:"Ground elevation – corrected lidar (v5)",opt:"Elevation – corrected lidar",unit:"m NAVD88",lo:-0.5,hi:2,pal:"terrain",dec:2,
-  note:"Lidar v5: the mapped water bodies plus the hand-drawn channel connections; the bed is a smooth bowl, shallow at the banks and deeper in the middle, fitted to the GNSS survey. Land is the lidar as flown."},   // opt: shorter text that fits the closed select
+  note:"Corrected lidar: the original ponds are unchanged; the creeks and the hand-drawn channel connections get a smooth bowl-shaped bed, shallow at the banks and deeper in the middle, fitted to the GNSS survey."},   // opt: shorter text that fits the closed select
  elevo:{name:"Ground elevation – original lidar",opt:"Elevation – original lidar",unit:"m NAVD88",lo:-0.5,hi:2,pal:"terrain",dec:2},
  elevd:{name:"Correction: corrected minus original",opt:"Corrected − original lidar",unit:"m",lo:-0.5,hi:0.5,pal:"diverging",dec:2,note:"transparent: no correction, or within ±1 cm (the rounding step of both maps)"}};
 const LAYER={sal_s:"surface",sal_da:"depth-averaged",sal_b:"bottom"};
