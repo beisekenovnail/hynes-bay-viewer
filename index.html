@@ -86,7 +86,7 @@ details{margin-top:9px;border-top:1px solid var(--line);padding-top:7px}summary{
 <div id="series" class="card" hidden><div class="h"><span id="stitle"></span><button id="sclose" title="close">×</button></div><div id="slegend"></div><canvas id="chart" title="click or drag to change the date"></canvas><div id="snote" hidden></div></div>
 <div id="foot"></div>
 <div id="attr" hidden>Imagery © Esri, Maxar, Earthstar Geographics</div>
-<script src="data/base_data.js"></script>
+<script src="data/base_data.js?v=202610020308"></script>
 <script>
 const $=id=>document.getElementById(id),dpr=Math.max(1,window.devicePixelRatio||1);
 const b64=(s,T)=>{const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new T(u.buffer)};
