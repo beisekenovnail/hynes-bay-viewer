@@ -124,7 +124,7 @@ const VARS={icm:{salinity:{name:"Salinity",unit:"ppt",key:"salinity",lo:0,hi:35,
   currents:{name:"Currents, depth-averaged",unit:"m/s"}}};
 // static maps from the 2.2 x 2.5 m lidar grids (they do not change with the date)
 const STATIC={elev3:{name:"Ground elevation – corrected lidar (v5)",opt:"Elevation – corrected lidar",unit:"m NAVD88",lo:-0.5,hi:2,pal:"terrain",dec:2,
-  note:"Lidar v5: water from Rusty's layer plus the hand-drawn channel connections; the bed is a smooth bowl, shallow at the banks and deeper in the middle, fitted to the GNSS survey. Land is the lidar as flown."},   // opt: shorter text that fits the closed select
+  note:"Lidar v5: the mapped water bodies plus the hand-drawn channel connections; the bed is a smooth bowl, shallow at the banks and deeper in the middle, fitted to the GNSS survey. Land is the lidar as flown."},   // opt: shorter text that fits the closed select
  elevo:{name:"Ground elevation – original lidar",opt:"Elevation – original lidar",unit:"m NAVD88",lo:-0.5,hi:2,pal:"terrain",dec:2},
  elevd:{name:"Correction: corrected minus original",opt:"Corrected − original lidar",unit:"m",lo:-0.5,hi:0.5,pal:"diverging",dec:2,note:"transparent: no correction, or within ±1 cm (the rounding step of both maps)"}};
 const LAYER={sal_s:"surface",sal_da:"depth-averaged",sal_b:"bottom"};
@@ -275,7 +275,7 @@ function currentArrows(){const C=SC.W.cur,n=C.lon.length,o=ti*n;for(let k=0;k<n;
 // ---------------- extra layers: cumulative connectivity, freshwater inflow cell 56–57 → cell 52 (and the unused creek-dig layer) ----------------
 const DIGC="#ff8a1c",DIGO="rgba(255,226,170,.9)";
 function polyline(pts){ctx.beginPath();pts.forEach((p,k)=>{const q=P(p[0],p[1]);k?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])})}
-// ---------------- cumulative connectivity (Rusty): every hour two neighbouring cells are connected, the water depth over the
+// ---------------- cumulative connectivity: every hour two neighbouring cells are connected, the water depth over the
 // connection is added to the cell the water goes into; data/connectivity.js holds the daily sums per pair and direction and
 // is loaded when the layer is first switched on; the page sums them from the chosen start to the day shown
 const CUMPAL=[[0,"#ffffd9"],[.2,"#c7e9b4"],[.4,"#7fcdbb"],[.6,"#41b6c4"],[.8,"#225ea8"],[1,"#081d58"]];
@@ -481,8 +481,7 @@ cv.addEventListener("dblclick",()=>{sel=selBefore;view={k:1,x:0,y:0};draw()});cv
 // ---------------- controls ----------------
 for(const d of DS)$("model").add(new Option(d.label,d.id));for(const p of Object.keys(PALS))$("pal").add(new Option(p,p));
 function setupVars(){const s=$("var");s.innerHTML="";for(const [k,Vv] of Object.entries(VARS[kind()]))s.add(new Option(Vv.name,k));
- if(BA.lidar){const og=document.createElement("optgroup");og.label="Lidar (static maps)";for(const [k,Vv] of Object.entries(STATIC)){const o=new Option(Vv.opt||Vv.name,k);o.title=Vv.name;og.appendChild(o)}s.appendChild(og)}
- if(!VARS[kind()][cur]&&!(STATIC[cur]&&BA.lidar))cur="salinity";s.value=cur;
+ if(!VARS[kind()][cur])cur="salinity";s.value=cur;   // the static lidar maps are not offered (the relief checkbox still shows the lidar)
  $("layerrow").hidden=!(kind()=="schism"&&cur=="salinity");$("t").max=dates().length-1;$("foot").textContent=(kind()=="icm"?I.meta:SC.W.meta);digOptions()}
 function syncSettings(){const dis=arrowVar(),stat=isStatic();for(const id of["lo","hi","pal","auto"])$(id).disabled=dis;$("paint").hidden=$("paintlbl").hidden=kind()!="icm"||stat;
  $("autolbl").textContent=stat?"Auto range (map)":"Auto range (this day)";$("speed").hidden=$("speedlbl").hidden=stat;if(dis)return;const s=st();$("lo").value=s.lo;$("hi").value=s.hi;$("pal").value=s.pal;$("auto").checked=s.auto}
@@ -494,7 +493,7 @@ $("var").onchange=e=>{cur=e.target.value;if(isStatic()&&timer)play();$("layerrow
 $("lo").onchange=e=>{st().lo=+e.target.value;st().auto=false;draw()};$("hi").onchange=e=>{st().hi=+e.target.value;st().auto=false;draw()};
 $("pal").onchange=e=>{st().pal=e.target.value;draw()};$("auto").onchange=e=>{st().auto=e.target.checked;if(!e.target.checked){st().lo=V().lo;st().hi=V().hi}draw()};
 for(const id of["paint","outl","lbl","L_sat","L_rel","L_mod","L_st","lidar","L_dig","L_con","conper"])$(id).onchange=draw;
-if(CI)CI.starts.forEach((p,k)=>$("conper").add(new Option(p,k)));
+if(CI){CI.starts.forEach((p,k)=>$("conper").add(new Option(p,k)));$("conper").value="1"}   // default: summed since 1 Jan of the year shown
 if(!DIGS.length)$("L_dig").disabled=true;if(!CONN.length)$("L_con").disabled=true;if(!INF)$("L_in").disabled=true;if(!BA.layers)$("lay2").hidden=true;
 function fitTo(pts,rpad){const W=innerWidth,H=innerHeight,left=310,top=60,bot=$("series").hidden?H-60:$("series").getBoundingClientRect().top-16;let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;   // fit points and the marsh, right of the panel and above an open chart
  for(const s of pts.concat([{lon:B.lon0,lat:B.lat0},{lon:B.lon1,lat:B.lat1}])){const px=fit.x+(s.lon-B.lon0)*cosl*fit.s,py=fit.y+(B.lat1-s.lat)*fit.s;x0=Math.min(x0,px);x1=Math.max(x1,px);y0=Math.min(y0,py);y1=Math.max(y1,py)}
