@@ -100,7 +100,7 @@ const BA=window.BASE,G=BA.dem,B=BA.bounds,CELLS=BA.cells,LINKS=BA.links,RW=G.w,R
 const hs=new Image();hs.src="data:image/png;base64,"+G.hs;
 const STN=BA.stations||[],ORGC={NOAA:"#1f5fbf",TWDB:"#e07b00",NCEI:"#7b3fb5",USGS:"#2a9d4b"};
 const LAY=BA.layers||{},DIGS=LAY.digs?LAY.digs.items:[],CI=LAY.conn||null,CONN=CI?CI.pairs:[],INF=LAY.inflow||null,CTD=LAY.ctd||null,CTS=CTD?CTD.sites:[];let selCtd=null;
-const MON=LAY.monthly||null;   // monthly maps: class per cell and month (salinity, water level, connectivity), the colours of the report figures
+const MON=LAY.monthly||null;   // monthly maps: class per cell and month
 function monOn(){return !!MON&&$("L_mon").checked&&ready()&&kind()=="icm"&&!isStatic()}
 function monIdx(){return MON&&ready()?MON.months.indexOf(dates()[ti].slice(0,7)):-1}
 function monVar(){return MON.vars[$("monvar").value]}
@@ -108,7 +108,7 @@ function monCells(op){const j=monIdx();if(j<0)return;const M=monVar(),c=M.c[j];c
  CELLS.forEach((cl,i)=>{const col=i==MON.bay&&M.bay_col?M.bay_col:c[i]>=0?M.cols[c[i]]:null;if(!col)return;ctx.fillStyle=col;path(cl);ctx.fill()});ctx.globalAlpha=1}
 function monStep(d,wrap){const D=dates(),n=MON.months.length;let j=MON.months.indexOf(D[ti].slice(0,7));if(j<0)j=d>0?-1:n;j+=d;
  if(wrap)j=(j+n)%n;else j=Math.min(n-1,Math.max(0,j));const m=MON.months[j];let k=D.indexOf(m+"-15");if(k<0)k=D.findIndex(x=>x.startsWith(m));if(k>=0)ti=k}
-// ---------------- satellite basemap: Esri World Imagery tiles (imagery only, no labels) ----------------
+// ---- satellite basemap (Esri World Imagery)
 const TILES=new Map();let tileRAF=0;
 const lon2x=(lon,z)=>(lon+180)/360*2**z,lat2y=(lat,z)=>{const r=lat*Math.PI/180;return(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*2**z};
 const x2lon=(x,z)=>x/2**z*360-180,y2lat=(y,z)=>{const n=Math.PI-2*Math.PI*y/2**z;return 180/Math.PI*Math.atan(.5*(Math.exp(n)-Math.exp(-n)))};
@@ -118,7 +118,7 @@ function satellite(W,H){const a=inv(0,0),b=inv(W,H),mpp=110574/(fit.s*view.k)/dp
  let z=Math.max(3,Math.min(18,Math.round(Math.log2(40075016.7*Math.cos(lat*Math.PI/180)/(256*mpp)))));
  const range=z=>[Math.floor(lon2x(a[0],z)),Math.floor(lon2x(b[0],z)),Math.floor(lat2y(a[1],z)),Math.floor(lat2y(b[1],z))];
  let r=range(z);while((r[1]-r[0]+1)*(r[3]-r[2]+1)>150&&z>3)r=range(--z);
- for(const zz of [Math.max(3,z-3),z]){const q=range(zz);   // coarse level first, so the map is never blank while detail loads
+ for(const zz of [Math.max(3,z-3),z]){const q=range(zz);   // coarse tiles first
   for(let x=q[0];x<=q[1];x++)for(let y=q[2];y<=q[3];y++){const t=tile(zz,x,y);if(!t.complete||!t.naturalWidth)continue;
    const p=P(x2lon(x,zz),y2lat(y,zz)),s=P(x2lon(x+1,zz),y2lat(y+1,zz));ctx.drawImage(t,p[0],p[1],s[0]-p[0]+.6,s[1]-p[1]+.6)}}}
 const PALS={ocean:[[0,"#14213d"],[.2,"#1f4e79"],[.4,"#2a7f8f"],[.6,"#5fb49c"],[.8,"#c9d99a"],[1,"#f4e3a1"]],
@@ -136,7 +136,7 @@ const VARS={icm:{salinity:{name:"Salinity",unit:"ppt",key:"salinity",lo:0,hi:35,
   temperature:{name:"Water temperature",unit:"°C",q:"temp_s",lo:5,hi:35,pal:"thermal",dec:1},
   depth:{name:"Water depth",unit:"m",q:"depth",lo:0,hi:1.2,pal:"blues",dec:2},
   currents:{name:"Currents, depth-averaged",unit:"m/s"}}};
-// static maps from the 2.2 x 2.5 m lidar grids (they do not change with the date)
+// static lidar maps
 const STATIC={elev3:{name:"Ground elevation – corrected lidar (v6)",opt:"Elevation – corrected lidar",unit:"m NAVD88",lo:-0.5,hi:2,pal:"terrain",dec:2,
   note:"Corrected lidar: the original ponds are unchanged; the creeks and the hand-drawn channel connections get a smooth bowl-shaped bed, shallow at the banks and deeper in the middle, fitted to the GNSS survey."},   // opt: shorter text that fits the closed select
  elevo:{name:"Ground elevation – original lidar",opt:"Elevation – original lidar",unit:"m NAVD88",lo:-0.5,hi:2,pal:"terrain",dec:2},
@@ -156,9 +156,9 @@ function inv(x,y){const bx=((x-view.x)/view.k-fit.x)/fit.s,by=((y-view.y)/view.k
 const cv=$("map"),ctx=cv.getContext("2d");
 function resize(){const W=innerWidth,H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;const bw=(B.lon1-B.lon0)*cosl,bh=B.lat1-B.lat0,pad=36;
  fit.s=Math.min((W-2*pad)/bw,(H-2*pad)/bh);fit.x=(W-bw*fit.s)/2;fit.y=(H-bh*fit.s)/2;
- const pl=$("panel").getBoundingClientRect().right+12;   // narrow window: keep the marsh clear of the control panel
+ const pl=$("panel").getBoundingClientRect().right+12;   // keep the marsh clear of the panel
  if(fit.x<pl&&W-pl-pad>W/2){fit.s=Math.min(fit.s,(W-pl-pad)/bw);fit.x=Math.max(pl,(W-bw*fit.s)/2);fit.y=(H-bh*fit.s)/2}draw()}
-// ---------------- datasets (lazy loading) ----------------
+// ---- datasets (lazy loading)
 function decodeSchism(W){const g=W.grid;SC={W,g,idx:b64(g.idx,Int32Array),bed:b64(g.bed,Int16Array),q:{},cu:b64(W.cur.u,Int8Array),cvv:b64(W.cur.v,Int8Array)};
  SC.n=SC.idx.length;for(const k in W.q)SC.q[k]={lo:W.q[k].lo,hi:W.q[k].hi,a:b64(W.q[k].data,Uint8Array)};
  SC.rev=new Int32Array(g.w*g.h).fill(-1);SC.idx.forEach((p,k)=>SC.rev[p]=k);SC.off=document.createElement("canvas");SC.off.width=g.w;SC.off.height=g.h;SC.ctx=SC.off.getContext("2d");SC.img=SC.ctx.createImageData(g.w,g.h)}
@@ -168,11 +168,11 @@ function loadDS(d,done,fail){const use=()=>{if(d.kind=="icm")I=window[d.glob];el
  s.onload=()=>{n.hidden=true;use()};s.onerror=()=>{n.textContent="Not available yet: "+d.file;fail&&fail()};document.head.appendChild(s)}
 const qkey=()=>cur=="salinity"?layer:VARS.schism[cur].q;
 function sval(key,k,t){const q=SC.q[key],c=q.a[t*SC.n+k];return c===255?null:q.lo+(q.hi-q.lo)*c/254}
-// ---------------- fine lidar: original (bathy_lidar 2018) and corrected (DEM v3), 1 cm codes ----------------
+// ---- fine lidar, 1 cm codes
 const LD={ready:false,busy:false,err:null,hsc:{},sc:null,sk:"",cb:null,bmap:null,digErr:null};
 async function inflate(s){const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
  const st=new Blob([u]).stream().pipeThrough(new DecompressionStream("deflate"));return new Uint8Array(await new Response(st).arrayBuffer())}
-function unmed(u,w,h){const n=w*h,o=new Int16Array(n);   // zig-zag residual planes -> MED (LOCO-I) prediction undone row by row
+function unmed(u,w,h){const n=w*h,o=new Int16Array(n);   // undo the MED (LOCO-I) prediction
  for(let r=0,i=0;r<h;r++)for(let c=0;c<w;c++,i++){const z=u[i]|(u[n+i]<<8),res=(z>>>1)^-(z&1),a=c?o[i-1]:0,b=r?o[i-w]:0,d=(r&&c)?o[i-w-1]:0;
   let p;if(d>=(a>b?a:b))p=a<b?a:b;else if(d<=(a<b?a:b))p=a>b?a:b;else p=a+b-d;o[i]=p+res}return o}
 async function decodeLidar(L){if(typeof DecompressionStream=="undefined")throw new Error("this browser has no DecompressionStream");
@@ -201,7 +201,7 @@ function lidarAt(lon,lat){if(!LD.ready)return null;const L=LD.L,c=Math.floor((lo
  return{v3:zAt(i,"v3"),orig:zAt(i,"orig"),d:LD.dc[i]/100,dig:j==null?null:{z:zAt(i,"dig"),id:LD.DG.ids[LD.DG.k[j]],bed:LD.DG.bed[LD.DG.k[j]]}}}
 function hillshade(which){if(which=="dig"&&!LD.cb)which="v3";if(LD.hsc[which])return LD.hsc[which];const w=LD.w,h=LD.h,c3=LD.c3,dc=LD.dc,o=which=="orig",zg=which=="dig"?LD.cb:c3,n=w*h,H=new Float32Array(n),dx=2*LD.L.px_m[0]*100,dy=2*LD.L.px_m[1]*100;
  const zc=i=>o?c3[i]-dc[i]:zg[i],alt=Math.PI/4,az=7*Math.PI/4,sa=Math.sin(alt),ca=Math.cos(alt)*Math.cos(az),cb=-Math.cos(alt)*Math.sin(az);
- let s=0,s2=0,m=0;   // same light and contrast stretch as the 10 m hillshade of build_viewer.py (sun 315°, 45° high)
+ let s=0,s2=0,m=0;   // hillshade: sun 315°, 45° high
  for(let r=0,i=0;r<h;r++)for(let c=0;c<w;c++,i++){if(!c3[i]){H[i]=NaN;continue}const z=zc(i);
   const zl=c>0&&c3[i-1]?zc(i-1):z,zr=c<w-1&&c3[i+1]?zc(i+1):z,zu=r>0&&c3[i-w]?zc(i-w):z,zd=r<h-1&&c3[i+w]?zc(i+w):z;
   const gx=(zr-zl)/dx,gy=(zd-zu)/dy,v=(sa+ca*gy+cb*gx)/Math.sqrt(1+gx*gx+gy*gy);H[i]=v;s+=v;s2+=v*v;m++}
@@ -211,10 +211,10 @@ function hillshade(which){if(which=="dig"&&!LD.cb)which="v3";if(LD.hsc[which])re
 function staticCanvas(){const s=st(),key=[cur,s.pal,s.lo,s.hi].join("|");if(LD.sc&&LD.sk==key)return LD.sc;
  const w=LD.w,h=LD.h,n=w*h,c3=LD.c3,dc=LD.dc,cb=LD.cb||c3,L=lut(s.pal),span=(s.hi-s.lo)||1,zo=LD.L.zoff;if(!LD.sc){LD.sc=document.createElement("canvas");LD.sc.width=w;LD.sc.height=h;LD.sim=LD.sc.getContext("2d").createImageData(w,h)}
  const px=LD.sim.data;
- for(let i=0,q=0;i<n;i++,q+=4){const k=c3[i];if(!k||(cur=="elevd"&&dc[i]>=-1&&dc[i]<=1)){px[q+3]=0;continue}   // no data, or no correction beyond the 1 cm rounding (else 0/1 cm bands draw rings, e.g. cells 47/49): transparent
+ for(let i=0,q=0;i<n;i++,q+=4){const k=c3[i];if(!k||(cur=="elevd"&&dc[i]>=-1&&dc[i]<=1)){px[q+3]=0;continue}   // no data or no correction: transparent
   const v=cur=="elevd"?dc[i]/100:(cur=="elevo"?k-dc[i]:cur=="elevb"?cb[i]:k)/100-zo;let j=Math.round((v-s.lo)/span*255);j=j<0?0:j>255?255:j;px[q]=L[j*3];px[q+1]=L[j*3+1];px[q+2]=L[j*3+2];px[q+3]=255}
  LD.sc.getContext("2d").putImageData(LD.sim,0,0);LD.sk=key;return LD.sc}
-// ---------------- painting ----------------
+// ---- painting
 const off=document.createElement("canvas");off.width=RW;off.height=RH;const octx=off.getContext("2d"),img=octx.createImageData(RW,RH);
 function autoRange(){let a=[];
  if(isStatic()){if(!LD.ready)return;const [hh,o]=LD.hist[cur];let tot=0;for(let k=0;k<hh.length;k++)tot+=hh[k];if(!tot)return;   // whole map, from the code histogram
@@ -236,12 +236,12 @@ function path(c){ctx.beginPath();for(const r of c.rings){r.forEach((p,k)=>{const
 function drawBox(im,g,alpha){const a=P(g.lon0,g.lat1),b=P(g.lon1,g.lat0);ctx.globalAlpha=alpha;ctx.drawImage(im,a[0],a[1],b[0]-a[0],b[1]-a[1]);ctx.globalAlpha=1}
 function relief(alpha,mode,dem){const which=dem||$("lidar").value;
  if(LD.ready){const im=hillshade(which);ctx.globalCompositeOperation=mode||"source-over";drawBox(im,LD.L,alpha);ctx.globalCompositeOperation="source-over";return}
- if(which=="orig"&&hs.complete)drawBox(hs,G,alpha)}   // 10 m hillshade of the original lidar until the fine grids are ready
+ if(which=="orig"&&hs.complete)drawBox(hs,G,alpha)}   // 10 m hillshade until the fine grids load
 function draw(){const W=innerWidth,H=innerHeight;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
  const sat=$("L_sat").checked,a=P(G.lon0,G.lat1),b=P(G.lon1,G.lat0),op=+$("op").value,stat=isStatic(),rel=$("L_rel").checked,mod=$("L_mod").checked;ctx.imageSmoothingEnabled=true;$("attr").hidden=!sat;
- $("L_modlbl").textContent=stat?"Lidar map":"Model values";   // the same box shows / hides a model variable or a static lidar map
+ $("L_modlbl").textContent=stat?"Lidar map":"Model values";   // model variable or static lidar map
  if(sat){ctx.fillStyle="#29322d";ctx.fillRect(0,0,W,H);satellite(W,H)}
- const statElev=stat&&mod&&cur!="elevd"&&LD.ready;   // an elevation map is shaded with its own lidar on top (below)
+ const statElev=stat&&mod&&cur!="elevd"&&LD.ready;   // elevation maps get their own relief
  if(rel&&!statElev)relief(sat?.5:.85);
  lidarNote();
  if(!ready()){stations();scalebar(W,H);return}
@@ -263,7 +263,7 @@ function draw(){const W=innerWidth,H=innerHeight;ctx.setTransform(dpr,0,0,dpr,0,
  if(mod&&!stat){if(cur=="flow")flowArrows();if(cur=="currents")currentArrows()}
  if($("L_con").checked&&!stat)connLines();
  if($("L_dig").checked)digLines();
- if($("lbl").checked&&110574/(fit.s*view.k)<25){ctx.font="600 11px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.lineJoin="round";ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=3;ctx.fillStyle="#141a17";   // no cell numbers when zoomed far out (they would pile up)
+ if($("lbl").checked&&110574/(fit.s*view.k)<25){ctx.font="600 11px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.lineJoin="round";ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=3;ctx.fillStyle="#141a17";   // no cell numbers when zoomed far out
   CELLS.forEach(c=>{const q=P(c.cx,c.cy);ctx.strokeText(c.id,q[0],q[1]);ctx.fillText(c.id,q[0],q[1])});
   for(const p of XC){const q=P(p.lab[0],p.lab[1]);ctx.strokeText(p.id,q[0],q[1]);ctx.fillText(p.id,q[0],q[1])}}
  if($("L_dig").checked)digLabels();
@@ -272,16 +272,16 @@ function draw(){const W=innerWidth,H=innerHeight;ctx.setTransform(dpr,0,0,dpr,0,
  if($("L_ins").checked)insPoints();
  stations();scalebar(W,H);legend();syncSettings();$("date").textContent=monOn()&&monIdx()>=0?MON.month_labels[monIdx()]:dates()[ti];$("t").value=ti;
  $("timectl").hidden=stat;$("series").hidden=sel==null||stat;placeSeries();if(sel!=null&&!stat){chart();if(placeSeries())chart()}refreshTip()}
-function placeSeries(){const s=$("series"),lg=$("legend");if(s.hidden){lg.style.maxHeight="";return false}   // small window: keep the chart clear of the panel, and the legend clear of the chart
+function placeSeries(){const s=$("series"),lg=$("legend");if(s.hidden){lg.style.maxHeight="";return false}   // keep chart, panel and legend apart
  const W=innerWidth,pr=$("panel").getBoundingClientRect(),w0=s.style.width;let w=Math.min(760,W-24),left=(W-w)/2;
  if(left<pr.right+12&&innerHeight-36-s.offsetHeight<pr.bottom+8){const l2=pr.right+12,w2=Math.min(760,W-l2-12);if(w2>=440){left=l2;w=w2}}
  s.style.transform="none";s.style.left=left+"px";s.style.width=w+"px";
  const r=s.getBoundingClientRect(),lr=lg.getBoundingClientRect();lg.style.maxHeight=lr.right>r.left&&lr.left<r.right?Math.max(120,r.top-24)+"px":"";return s.style.width!=w0}
-let lastMove=null;   // a tooltip that is showing follows the date (play, keys, chart) and the zoom
+let lastMove=null;   // an open tooltip follows the date and zoom
 function refreshTip(){if(lastMove&&lastMove.target===cv&&!drag&&!cdrag&&$("tip").style.display=="block")hover(lastMove)}
 function lidarNote(){{const n=$("note");if(n.textContent.startsWith("Connectivity not available")&&!$("L_con").checked)n.hidden=true}const n=$("note"),need=isStatic()||$("L_rel").checked&&$("lidar").value!="orig";if(n.textContent.startsWith("Loading "+(ds.label||""))&&!ready())return;
  if(need&&!LD.ready){n.hidden=false;n.textContent=LD.err?"Fine lidar not available: "+LD.err:"Loading the fine lidar…";if(!LD.busy&&!LD.err)loadLidar()}else if(n.textContent.includes("lidar"))n.hidden=true}
-// ---------------- arrows ----------------
+// ---- arrows
 const mag=v=>Math.log10(Math.abs(v)/5e-4+1),curLen=s=>6+34*Math.sqrt(Math.min(s,1));
 function arrow(g,x,y,ang,len,lw,col){g.save();g.translate(x,y);g.rotate(ang);g.strokeStyle=col;g.fillStyle=col;g.lineWidth=lw;
  g.beginPath();g.moveTo(-len/2,0);g.lineTo(len/2-4,0);g.stroke();g.beginPath();g.moveTo(len/2+4,0);g.lineTo(len/2-5,-4);g.lineTo(len/2-5,4);g.closePath();g.fill();g.restore()}
@@ -289,12 +289,10 @@ function flowArrows(){const q=I.flow[ti],L=LINKS;for(let i=0;i<q.length;i++){con
  arrow(ctx,p[0],p[1],Math.atan2(-L.dy[i]*s,L.dx[i]*s),6+9*m,1+1.2*m,L.type[i]==1?"#123b5e":"#1f8a70")}}
 function currentArrows(){const C=SC.W.cur,n=C.lon.length,o=ti*n;for(let k=0;k<n;k++){const u=SC.cu[o+k],v=SC.cvv[o+k];if(u===-128||v===-128)continue;const sp=Math.hypot(u,v)/100;if(sp<0.004)continue;
  const p=P(C.lon[k],C.lat[k]);arrow(ctx,p[0],p[1],Math.atan2(-v,u),curLen(sp),1.3,"#123b5e")}}
-// ---------------- extra layers: cumulative connectivity, freshwater inflow cell 56–57 → cell 52 (and the unused creek-dig layer) ----------------
+// ---- extra layers: connectivity, upland inflow
 const DIGC="#ff8a1c",DIGO="rgba(255,226,170,.9)";
 function polyline(pts){ctx.beginPath();pts.forEach((p,k)=>{const q=P(p[0],p[1]);k?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])})}
-// ---------------- cumulative connectivity: every hour two neighbouring cells are connected, the water depth over the
-// connection is added to the cell the water goes into; data/connectivity.js holds the daily sums per pair and direction and
-// is loaded when the layer is first switched on; the page sums them from the chosen start to the day shown
+// ---- cumulative connectivity: daily sums per pair, added up to the day shown
 const CUMPAL=[[0,"#ffffd9"],[.2,"#c7e9b4"],[.4,"#7fcdbb"],[.6,"#41b6c4"],[.8,"#225ea8"],[1,"#081d58"]];
 const CD={ready:false,busy:false,err:null};
 async function loadConn(){if(!CI||CD.ready||CD.busy)return;CD.busy=true;CD.err=null;const nt=$("note");nt.hidden=false;nt.textContent="Loading the connectivity series…";
@@ -347,13 +345,14 @@ function digLines(){ctx.lineJoin="round";ctx.lineCap="round";
  for(const rec of[false,true])for(const d of DIGS){if(d.rec!=rec)continue;polyline(d.xy);ctx.strokeStyle="rgba(20,26,23,.8)";ctx.lineWidth=rec?5.5:3.4;ctx.stroke();ctx.strokeStyle=rec?DIGC:DIGO;ctx.lineWidth=rec?3.2:1.6;ctx.stroke();
   const m=P(d.mid[0],d.mid[1]);ctx.beginPath();ctx.arc(m[0],m[1],rec?3.6:2.6,0,7);ctx.fillStyle=rec?DIGC:DIGO;ctx.fill();ctx.lineWidth=1.2;ctx.strokeStyle="rgba(20,26,23,.85)";ctx.stroke()}
  ctx.lineCap="butt"}
-function digLabels(){const boxes=occupied().concat(ARTM.map(([x,y])=>[x-8,y-8,16,16])),W=innerWidth,H=innerHeight;   // clear of points, cell numbers, marks and each otherctx.textBaseline="middle";ctx.lineJoin="round";
+function digLabels(){const boxes=occupied().concat(ARTM.map(([x,y])=>[x-8,y-8,16,16])),W=innerWidth,H=innerHeight;   // keep labels apart
+ ctx.textBaseline="middle";ctx.lineJoin="round";
  for(const rec of[true,false])for(const d of DIGS.slice().sort((x,y)=>x.rank-y.rank)){if(d.rec!=rec)continue;const m=P(d.mid[0],d.mid[1]);if(m[0]<-40||m[1]<-20||m[0]>W+40||m[1]>H+20)continue;
   ctx.font=rec?"700 11px system-ui":"500 10px system-ui";const w=ctx.measureText(d.id).width+4,h=12;let spot=null;
   for(const [dx,dy] of [[7,-9],[7,9],[-7-w,-9],[-7-w,9],[-w/2,-15],[-w/2,15]]){const bx=[m[0]+dx,m[1]+dy-h/2,w,h];if(!boxes.some(o=>bx[0]<o[0]+o[2]&&o[0]<bx[0]+bx[2]&&bx[1]<o[1]+o[3]&&o[1]<bx[1]+bx[3])){spot=bx;break}}
   if(!spot)continue;boxes.push(spot);ctx.textAlign="left";ctx.strokeStyle="rgba(255,255,255,.92)";ctx.lineWidth=3;ctx.fillStyle=rec?"#8a3b00":"#5d4a2e";
   ctx.strokeText(d.id,spot[0]+2,spot[1]+h/2);ctx.fillText(d.id,spot[0]+2,spot[1]+h/2)}}
-// cells 56 / 57 are not ICM compartments: their runoff is the freshwater inflow into cell 52 at point.kml (INF)
+// cells 56/57: upland catchment, runoff enters cell 52
 const XC=INF?INF.polys:[],xcell=i=>XC.find(p=>p.id==i)||null,dayK=()=>INF?Math.round((Date.parse(dates()[ti])-Date.parse(INF.d0))/864e5):-1;
 const yrK=()=>INF?INF.years.indexOf(+dates()[ti].slice(0,4)):-1,m3=v=>v>=1e6?(v/1e6).toFixed(2)+" million m³":Math.round(v/1e3).toLocaleString("en-US")+" thousand m³";
 function basins(){if(!INF)return;for(const p of XC){path(p);ctx.fillStyle="rgba(27,111,179,.22)";ctx.fill()}}
@@ -375,7 +374,7 @@ function lineD(x,y,pts){let a=P(pts[0][0],pts[0][1]),m=Math.hypot(x-a[0],y-a[1])
 function inRings(lon,lat,rings){let ins=false;for(const r of rings)for(let i=0,j=r.length-1;i<r.length;j=i++){const [xi,yi]=r[i],[xj,yj]=r[j];if((yi>lat)!=(yj>lat)&&lon<(xj-xi)*(lat-yi)/(yj-yi)+xi)ins=!ins}return ins}
 const pct=f=>f==null?"–":(f*100).toFixed(f>0&&f<.001?2:1)+"%",Mm=v=>v==null?"–":Math.abs(v)<0.1?Math.abs(v).toFixed(3):Math.abs(v).toFixed(2),mm=v=>v==null?"–":v.toFixed(2)+" m";
 const ha=v=>v==null?"–":v.toFixed(1)+" ha",cellName=i=>i==BA.bay?"10 (bay)":String(i);
-// CTD gauges 2026 (Solinst LTC): daily means of the cleaned hourly data; site A was picked up on 5 Aug
+// CTD gauges 2026: daily means of the hourly data
 const ctdK=s=>Math.round((Date.parse(dates()[ti])-Date.parse(CTD.d0))/864e5),ctdV=(s,a,k)=>k>=0&&k<s[a].length?s[a][k]:null;
 function ctdPoints(){ctx.font="600 11px system-ui";ctx.textAlign="left";ctx.textBaseline="middle";ctx.lineJoin="round";
  for(const s of CTS){const q=P(s.lon,s.lat),r=6.5;ctx.beginPath();ctx.moveTo(q[0],q[1]-r);ctx.lineTo(q[0]+r,q[1]);ctx.lineTo(q[0],q[1]+r);ctx.lineTo(q[0]-r,q[1]);ctx.closePath();
@@ -396,17 +395,17 @@ function extraHit(x,y){
  {const s=ctdHit(x,y);if(s)return ctdText(s)}
  {const s=insHit(x,y);if(s)return`${s.name=="CTD"?"CTD gauge":"Aquadopp current meter"} · location only, no data yet\n${s.lat.toFixed(5)}, ${s.lon.toFixed(5)}`}
  if($("L_in").checked&&INF){const q=P(INF.point.lon,INF.point.lat);if(Math.hypot(q[0]-x,q[1]-y)<10)return inflowText(null)}
- if($("L_dig").checked){let best=null,bd=8;for(const d of DIGS){const m=P(d.mid[0],d.mid[1]),dd=Math.min(lineD(x,y,d.xy),Math.hypot(m[0]-x,m[1]-y))-(d.rec?1.5:0);if(dd<bd){bd=dd;best=d}}   // a recommended dig (drawn on top, wider) wins where a candidate shares its path (e.g. D06 inside PD141)
+ if($("L_dig").checked){let best=null,bd=8;for(const d of DIGS){const m=P(d.mid[0],d.mid[1]),dd=Math.min(lineD(x,y,d.xy),Math.hypot(m[0]-x,m[1]-y))-(d.rec?1.5:0);if(dd<bd){bd=dd;best=d}}   // a recommended dig wins where paths overlap
   if(best){const d=best,j=d.jb==null?"joins the bay: – (no tidal gain)":`joins the bay at ${mm(d.jb)} → ${mm(d.ja)} · hours connected ${d.hb==null?"–":(+d.hb).toFixed(1)}% → ${d.ha==null?"–":(+d.ha).toFixed(1)}%`;
    return`${d.id} · ${d.group} · ${d.rec?"recommended":"not in the recommended set"} (overall rank ${d.rank})\ndig ${d.len} m${d.path>d.len+1?` (path ${d.path} m)`:""} · sill ${mm(d.sill)} → bed ${mm(d.bed)} · cells ${d.cells.split(" ").join(", ")}\n${j}\ngain at P50 ${ha(d.g50)} · at P10 ${ha(d.g10)} · time-averaged ${d.gtl!=null&&d.gth!=null&&d.gth-d.gtl>=.05?d.gtl.toFixed(1)+"–"+d.gth.toFixed(1)+" ha":ha(d.gt)}`}}
  if($("L_con").checked&&CD.ready){const S=cumState();if(S){let best=-1,bd=1e9;CONN.forEach((c,k)=>{const [va,vb]=cumPair(S,k),tot=va+vb;if(tot<=1e-9)return;
    const p0=P(c.p[0][0],c.p[0][1]),p1=P(c.p[1][0],c.p[1][1]),dx=p1[0]-p0[0],dy=p1[1]-p0[1],L2=dx*dx+dy*dy,tt=L2?((x-p0[0])*dx+(y-p0[1])*dy)/L2:0;
-   if(tt<.2||tt>.8)return;const dd=segD(x,y,p0,p1)-cumW(tot)/2;if(dd<bd){bd=dd;best=k}});   // the line ends sit on the cell numbers: leave them to the cell tooltip
+   if(tt<.2||tt>.8)return;const dd=segD(x,y,p0,p1)-cumW(tot)/2;if(dd<bd){bd=dd;best=k}});   // line ends: leave them to the cell tooltip
   if(best>=0&&bd<4){const c=CONN[best],[va,vb,hrs]=cumPair(S,best);
    return`Cells ${cellName(c.a)} – ${cellName(c.b)} · ${c.con} · sill ${mm(c.sill)}\n${cumSpan()}: connected ${dys(hrs)} · depth over the connection summed ${mday(va+vb)}\nreceived by ${cellName(c.b)}: ${mday(va)} · by ${cellName(c.a)}: ${mday(vb)}`}}}
  {const xc=xcellAt(x,y);if(xc!=null)return inflowText(xc)}   // cells 56 / 57 are always on the map
  return null}
-// ---------------- decorations ----------------
+// ---- decorations
 function stations(){if(!$("L_st").checked)return;ctx.font="600 11px system-ui";ctx.textAlign="left";ctx.textBaseline="middle";ctx.lineJoin="round";
  for(const s of STN){const q=P(s.lon,s.lat);ctx.beginPath();ctx.arc(q[0],q[1],6,0,7);ctx.fillStyle=ORGC[s.org]||"#333";ctx.fill();ctx.lineWidth=2;ctx.strokeStyle="#fff";ctx.stroke();
   ctx.strokeStyle="rgba(255,255,255,.92)";ctx.lineWidth=3;ctx.fillStyle="#141a17";ctx.strokeText(s.short,q[0]+10,q[1]);ctx.fillText(s.short,q[0]+10,q[1])}}
@@ -450,10 +449,10 @@ function legendExtra(){const on=id=>$(id).checked,per=+$("conper").value,rdig=on
   `<span style="color:var(--mut)">click a gauge here or on the map: measured vs model, Jun – Nov 2026</span></div>`;
  if(on("L_ins"))h+=`<div class="lx"><b>Other instruments</b><svg width="16" height="14"><rect x="3" y="2" width="10" height="10" fill="#7b3fa0" stroke="#fff" stroke-width="1.6"/></svg>Aquadopp<br><svg width="16" height="14"><path d="M8 1.5 L14 7 L8 12.5 L2 7 Z" fill="#9aa3a0" stroke="#fff" stroke-width="1.6"/></svg>CTD<br><span style="color:var(--mut)">locations only, no data yet</span></div>`;
  $("lextra").innerHTML=h}
-// ---------------- time series ----------------
+// ---- time series
 const CH={L:38,R:8,w:0,n:0,i0:0,series:[],dec:1};
 function chart(){const c=$("chart"),w=c.clientWidth||740,h=150;c.width=w*dpr;c.height=h*dpr;const g=c.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
- const D=dates(),n=D.length;let series=[],label="",note="",dec=2,i0=0;   // series are drawn in order: the model line goes last, on top
+ const D=dates(),n=D.length;let series=[],label="",note="",dec=2,i0=0;   // model line last, on top
  if(sel=="all"&&kind()=="icm"){const avg=r=>{let s=0,n=0;r.forEach((v,i)=>{if(i!=BA.bay&&v!=null){s+=v;n++}});return n?s/n:null};
   if(monOn()){const M=monVar(),mi=D.map(d=>MON.months.indexOf(d.slice(0,7)));dec=M.dec;
    if(!M.bay_col)series.push({a:mi.map(m=>m<0?null:M.v[m][MON.bay]),col:"#f28e2b",lw:1.1,short:"Hynes Bay",name:"Hynes Bay · monthly mean"});
@@ -505,14 +504,14 @@ function xaxis(g,D,X,h,T,Bm){const n=D.length,ppd=(X(n-1)-X(0))/Math.max(1,n-1);
  if(n>540){const st=[];D.forEach((d,i)=>{if(i==0||d.slice(0,4)!=D[i-1].slice(0,4))st.push(i)});const every=Math.max(1,Math.ceil(40/(365*ppd)));   // one label per year, centred on the year
   st.forEach((i,j)=>{if(j>0){g.beginPath();g.moveTo(X(i),T);g.lineTo(X(i),h-Bm);g.stroke()}const e=j+1<st.length?st[j+1]:n;if(j%every||e-i<90)return;g.fillText(D[i].slice(0,4),(X(i)+X(e-1))/2,h-4)})}
  else{const every=Math.max(1,Math.ceil(50/(30.4*ppd)));let m=0;D.forEach((d,i)=>{if(i==0||d.endsWith("-01")){if(m++%every==0)g.fillText(d.slice(0,7),X(i),h-4)}})}}
-// the time cursor can be clicked or dragged inside the chart; hovering shows the date and values
+// click or drag the time cursor; hover shows values
 const chartIndex=e=>{const r=$("chart").getBoundingClientRect();return (CH.i0||0)+Math.max(0,Math.min(CH.n-1,Math.round((e.clientX-r.left-CH.L)/(CH.w-CH.L-CH.R)*(CH.n-1))))};
 function chartTip(e){const i=chartIndex(e),tp=$("tip");tp.textContent=(monOn()?dates()[i].slice(0,7):dates()[i])+" · "+CH.series.slice().reverse().map(s=>`${s.short} ${s.a[i]==null?"–":(+s.a[i]).toFixed(CH.dec)}`).join(" · ");
  tp.style.display="block";tp.style.left=Math.max(8,Math.min(innerWidth-8-tp.offsetWidth,e.clientX+14))+"px";tp.style.top=(e.clientY-32)+"px"}
 let cdrag=false;
 $("chart").addEventListener("mousedown",e=>{if(!ready()||!CH.n)return;cdrag=true;ti=chartIndex(e);draw();chartTip(e);e.preventDefault()});
 $("chart").addEventListener("mouseleave",()=>{if(!cdrag)$("tip").style.display="none"});
-// ---------------- hit testing ----------------
+// ---- hit testing
 function hit(x,y){const q=inv(x,y);
  if(kind()=="schism"){const g=SC.g,c=Math.floor((q[0]-g.lon0)/(g.lon1-g.lon0)*g.w),r=Math.floor((g.lat1-q[1])/(g.lat1-g.lat0)*g.h);if(c<0||r<0||c>=g.w||r>=g.h)return null;
   const k=SC.rev[r*g.w+c];return k<0?null:{k,lon:q[0],lat:q[1],bed:SC.bed[k]/100}}
@@ -545,11 +544,11 @@ addEventListener("mousemove",e=>{lastMove=e;if(cdrag){ti=chartIndex(e);draw();ch
 $("lextra").addEventListener("click",e=>{const b=e.target.closest(".ctdb");if(!b||!ready())return;const s=CTS[+b.dataset.i];selCtd=s;sel=s.cell;draw()});
 addEventListener("mouseup",e=>{cdrag=false;if(!drag)return;cv.classList.remove("drag");if(!drag.moved&&ready()){const cs=ctdHit(e.clientX,e.clientY),h=hit(e.clientX,e.clientY),xc=kind()=="icm"?xcellAt(e.clientX,e.clientY):null;selCtd=cs;sel=cs?cs.cell:h?(kind()=="icm"?h.i:h):xc;draw()}drag=null});
 cv.addEventListener("wheel",e=>{e.preventDefault();const k=Math.min(40,Math.max(.06,view.k*Math.exp(-e.deltaY*.0015))),r=k/view.k;view.x=e.clientX-(e.clientX-view.x)*r;view.y=e.clientY-(e.clientY-view.y)*r;view.k=k;draw()},{passive:false});
-cv.addEventListener("dblclick",()=>{sel=selBefore;view={k:1,x:0,y:0};draw()});cv.addEventListener("mouseleave",()=>$("tip").style.display="none");   // a double-click only resets the view: undo the cell pick of its first click
-// ---------------- controls ----------------
+cv.addEventListener("dblclick",()=>{sel=selBefore;view={k:1,x:0,y:0};draw()});cv.addEventListener("mouseleave",()=>$("tip").style.display="none");   // double-click resets the view: undo its first click
+// ---- controls
 for(const d of DS)$("model").add(new Option(d.label,d.id));for(const p of Object.keys(PALS))$("pal").add(new Option(p,p));
 function setupVars(){const s=$("var");s.innerHTML="";for(const [k,Vv] of Object.entries(VARS[kind()]))s.add(new Option(Vv.name,k));
- if(!VARS[kind()][cur])cur="salinity";s.value=cur;   // the static lidar maps are not offered (the relief checkbox still shows the lidar)
+ if(!VARS[kind()][cur])cur="salinity";s.value=cur;   // static lidar maps not offered
  $("layerrow").hidden=!(kind()=="schism"&&cur=="salinity");$("t").max=dates().length-1;$("foot").textContent=(kind()=="icm"?I.meta:SC.W.meta);digOptions()}
 function syncSettings(){const dis=arrowVar(),stat=isStatic();for(const id of["lo","hi","pal","auto"])$(id).disabled=dis;$("paint").hidden=$("paintlbl").hidden=kind()!="icm"||stat;
  $("autolbl").textContent=stat?"Auto range (map)":"Auto range (this day)";$("speed").hidden=$("speedlbl").hidden=stat;if(dis)return;const s=st();$("lo").value=s.lo;$("hi").value=s.hi;$("pal").value=s.pal;$("auto").checked=s.auto}
@@ -563,13 +562,13 @@ $("pal").onchange=e=>{st().pal=e.target.value;draw()};$("auto").onchange=e=>{st(
 for(const id of["paint","outl","lbl","L_sat","L_rel","L_mod","L_st","lidar","L_dig","L_con","conper","L_ctd","L_ins","L_mon","monvar"])$(id).onchange=draw;
 if(CI){CI.starts.forEach((p,k)=>$("conper").add(new Option(p,k)));$("conper").value="1"}   // default: summed since 1 Jan of the year shown
 if(!DIGS.length)$("L_dig").disabled=true;if(!CONN.length)$("L_con").disabled=true;if(!INF)$("L_in").disabled=true;if(!CTD)$("L_ctd").disabled=true;if(!MON)$("L_mon").disabled=true;if(!BA.layers)$("lay2").hidden=true;
-function fitTo(pts,rpad){const W=innerWidth,H=innerHeight,left=310,top=60,bot=$("series").hidden?H-60:$("series").getBoundingClientRect().top-16;let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;   // fit points and the marsh, right of the panel and above an open chart
+function fitTo(pts,rpad){const W=innerWidth,H=innerHeight,left=310,top=60,bot=$("series").hidden?H-60:$("series").getBoundingClientRect().top-16;let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;   // fit the marsh beside the panel, above the chart
  for(const s of pts.concat([{lon:B.lon0,lat:B.lat0},{lon:B.lon1,lat:B.lat1}])){const px=fit.x+(s.lon-B.lon0)*cosl*fit.s,py=fit.y+(B.lat1-s.lat)*fit.s;x0=Math.min(x0,px);x1=Math.max(x1,px);y0=Math.min(y0,py);y1=Math.max(y1,py)}
  const k=Math.min((W-left-rpad)/(x1-x0),(bot-top)/(y1-y0));view.k=k;view.x=left+(W-left-rpad)/2+20-(x0+x1)/2*k;view.y=(top+bot)/2-(y0+y1)/2*k;draw()}
 $("fitst").onclick=()=>fitTo(STN,$("legend").offsetWidth+160);   // keep the station names clear of the legend
 $("L_in").onchange=()=>{if(!$("L_in").checked||!INF)return draw();const pts=[{lon:INF.point.lon,lat:INF.point.lat}];for(const p of INF.polys)for(const r of p.rings)for(const v of r)pts.push({lon:v[0],lat:v[1]});
- legend();const lr=$("legend").getBoundingClientRect();   // the legend grows with the inflow entry: measure it first
- const seen=pts.every(p=>{const q=P(p.lon,p.lat);return q[0]>310&&q[0]<innerWidth&&q[1]>0&&q[1]<innerHeight&&!(q[0]>lr.left-8&&q[1]<lr.bottom+8)});seen?draw():fitTo(pts,lr.width+24)};   // bring the basins into view when they are off screen or under the legend
+ legend();const lr=$("legend").getBoundingClientRect();   // measure the legend first
+ const seen=pts.every(p=>{const q=P(p.lon,p.lat);return q[0]>310&&q[0]<innerWidth&&q[1]>0&&q[1]<innerHeight&&!(q[0]>lr.left-8&&q[1]<lr.bottom+8)});seen?draw():fitTo(pts,lr.width+24)};   // bring the basins into view
 $("op").oninput=draw;$("t").oninput=e=>{ti=+e.target.value;draw()};
 const step=d=>{if(isStatic())return;if(monOn()){monStep(d);draw();return}ti=Math.min(dates().length-1,Math.max(0,ti+d));draw()};$("prev").onclick=$("sprev").onclick=()=>step(-1);$("next").onclick=$("snext").onclick=()=>step(1);
 function play(){if(timer){clearInterval(timer);timer=null;$("play").textContent=$("splay").textContent="▶"}else if(!isStatic()){timer=setInterval(()=>{if(monOn())monStep(1,true);else ti=(ti+1)%dates().length;draw()},+$("speed").value);$("play").textContent=$("splay").textContent="❚❚"}}
