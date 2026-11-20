@@ -1,0 +1,581 @@
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hynes Bay · model results</title>
+<link rel="icon" href="data:,">
+<style>
+:root{--bg:#eceee9;--card:rgba(255,255,255,.95);--ink:#1d2320;--mut:#69736d;--line:#d4d9d3;--acc:#1f6f5c;--hi:#e4572e}
+*{box-sizing:border-box}[hidden]{display:none!important}
+html,body{margin:0;height:100%;overflow:hidden;background:var(--bg);color:var(--ink);font:13px/1.35 ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif}
+#map{position:fixed;inset:0;width:100vw;height:100vh;display:block;cursor:grab}#map.drag{cursor:grabbing}
+.card{position:fixed;background:var(--card);border:1px solid var(--line);border-radius:10px;box-shadow:0 2px 12px rgba(0,0,0,.07)}
+#panel{top:12px;left:12px;width:290px;padding:11px 12px 10px;max-height:calc(100vh - 48px);overflow-y:auto}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:0 0 8px}.row select{max-width:196px}.row #var{max-width:207px}
+select,input[type=number]{font:inherit;padding:3px 6px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--ink)}
+input[type=range]{width:100%;accent-color:var(--acc);margin:4px 0 0}
+.time{display:flex;align-items:center;gap:5px}
+.time button{border:1px solid var(--line);background:#fff;border-radius:6px;min-width:30px;padding:3px 7px;cursor:pointer;font:inherit;color:var(--ink)}
+.time button:hover{border-color:var(--acc)}
+#date{margin-left:auto;font-weight:600;font-variant-numeric:tabular-nums}
+details{margin-top:9px;border-top:1px solid var(--line);padding-top:7px}summary{cursor:pointer;color:var(--mut)}
+.set{display:grid;grid-template-columns:1fr auto;gap:7px 10px;align-items:center;margin-top:8px}
+.set input[type=number]{width:64px}.set input[type=range]{width:110px;margin:0}
+#note{color:var(--mut);font-size:12px;margin-top:6px}
+#legend{top:12px;right:12px;padding:10px 12px 8px;max-height:calc(100vh - 24px);overflow-y:auto}
+#ltitle{font-weight:600;margin-bottom:6px;max-width:250px}
+#lnote{font-size:11px;color:var(--mut);margin-top:2px;max-width:250px;line-height:1.35}
+#lnote.off{color:#b2182b}#lbar.off{opacity:.3}
+#lextra .lx{border-top:1px solid var(--line);margin-top:7px;padding-top:6px;font-size:11px;line-height:1.5}
+#lextra .ctdb{display:flex;align-items:center;gap:4px;width:100%;border:1px solid #b9c4be;background:#fff;border-radius:7px;padding:4px 7px;margin:0 0 4px;font:inherit;font-weight:600;color:var(--ink);text-align:left;cursor:pointer;box-shadow:0 1px 2px rgba(0,0,0,.08)}#lextra .ctdb:hover{border-color:var(--acc);background:#eef4f1}#lextra .ctdb.on{border-color:var(--acc);background:#e2efe8;box-shadow:inset 0 0 0 1px var(--acc)}
+#lextra .lx.mon .mrow{display:flex;align-items:center;gap:4px;line-height:15px}#lextra .lx.mon b{display:block;margin-bottom:2px}
+#lextra .lx b{font-weight:600;display:block;margin-bottom:2px;font-size:12px}
+#lextra svg{vertical-align:middle;margin-right:5px}
+#tip{position:fixed;pointer-events:none;background:rgba(29,35,32,.92);color:#fff;padding:4px 7px;border-radius:5px;font-size:12px;line-height:1.4;display:none;white-space:pre-line;max-width:460px;z-index:5}
+#series{left:50%;transform:translateX(-50%);bottom:36px;width:min(760px,calc(100vw - 24px));padding:7px 10px 6px}
+#series .h{display:flex;justify-content:space-between;align-items:center;color:var(--mut);margin-bottom:3px}
+#series .sb{display:flex;gap:5px;flex:none;margin-left:10px;align-items:center}#series .sb button{min-width:34px;height:28px;padding:0 8px;border:1px solid #b9c4be;background:#fff;border-radius:7px;color:var(--ink);font-size:18px;font-weight:600;box-shadow:0 1px 2px rgba(0,0,0,.08)}#series .sb button:hover{border-color:var(--acc);background:#eef4f1}#series #splay{background:var(--acc);border-color:var(--acc);color:#fff;font-size:13px;min-width:44px}#series #splay:hover{filter:brightness(1.1)}#series #sclose{border-color:transparent;box-shadow:none;background:none;color:var(--mut);margin-left:4px}
+#series button{border:0;background:none;font-size:17px;line-height:1;cursor:pointer;color:var(--mut)}
+#chart{width:100%;height:150px;display:block;cursor:col-resize}
+#slegend{font-size:11px;margin:0 0 3px}#slegend .sw{display:inline-block;width:16px;height:3px;border-radius:2px;vertical-align:middle;margin:0 5px 0 12px}#slegend .sw:first-child{margin-left:0}
+#snote{font-size:11px;color:var(--mut);margin-top:2px}
+#foot{position:fixed;left:12px;bottom:9px;color:var(--mut);font-size:11px;max-width:min(460px,50vw);background:rgba(255,255,255,.82);padding:2px 7px;border-radius:5px}
+.lay{display:grid;grid-template-columns:auto 1fr;gap:5px 7px;align-items:center;margin-top:9px;border-top:1px solid var(--line);padding-top:8px}
+.lay input{margin:0;accent-color:var(--acc)}.lay label{cursor:pointer}
+.lay .sub{color:var(--mut);font-size:11px;margin-top:-2px}
+.lay .opt{display:flex;align-items:center;justify-content:space-between;gap:6px}.lay .opt select{font-size:12px;padding:1px 3px;max-width:150px}
+.lay select.wide{grid-column:1/-1;font-size:11.5px;padding:1px 3px;width:100%;margin-top:-3px}
+.dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin:0 3px 0 7px;border:1px solid #fff;box-shadow:0 0 0 1px rgba(0,0,0,.25)}.dot:first-child{margin-left:0}
+#fitst{grid-column:1/-1;justify-self:start;border:1px solid var(--line);background:#fff;border-radius:6px;padding:3px 9px;cursor:pointer;font:inherit;color:var(--ink);margin-top:2px}#fitst:hover{border-color:var(--acc)}
+#attr{position:fixed;right:12px;bottom:3px;color:rgba(255,255,255,.9);font-size:10px;text-shadow:0 0 3px #000}
+</style>
+<canvas id="map"></canvas>
+<div id="panel" class="card">
+  <label class="row">Model <select id="model"></select></label>
+  <label class="row">Variable <select id="var"></select></label>
+  <label class="row" id="layerrow" hidden>Layer <select id="layer"><option value="sal_s">surface</option><option value="sal_da">depth-averaged</option><option value="sal_b">bottom</option></select></label>
+  <div id="timectl">
+  <div class="time"><button id="prev" title="previous day (←)">‹</button><button id="play" title="play / pause (space)">▶</button><button id="next" title="next day (→)">›</button><span id="date"></span></div>
+  <input type="range" id="t" min="0" value="0">
+  </div>
+  <div class="lay">
+    <input type="checkbox" id="L_sat" checked><label for="L_sat">Satellite imagery</label>
+    <input type="checkbox" id="L_rel"><label for="L_rel">Lidar relief</label>
+    <select id="lidar" class="wide" title="which lidar the hillshade is made from"><option value="v3">Corrected lidar</option><option value="orig">Original lidar (2018)</option></select>
+    <input type="checkbox" id="L_mod" checked><label for="L_mod" id="L_modlbl" title="show or hide the colours of the Variable chosen above (model results or a static lidar map)">Model values</label>
+    <input type="checkbox" id="outl" checked><label for="outl">Cell boundaries</label>
+    <input type="checkbox" id="lbl" checked><label for="lbl">Cell numbers</label>
+    <input type="checkbox" id="L_st" checked><label for="L_st">Data stations</label>
+    <span></span><span class="sub"><i class="dot" style="background:#1f5fbf"></i>NOAA<i class="dot" style="background:#e07b00"></i>TWDB<i class="dot" style="background:#7b3fb5"></i>NCEI<i class="dot" style="background:#2a9d4b"></i>USGS</span>
+    <button id="fitst" title="zoom out to see every station; double-click the map to come back">Show all stations</button>
+  </div>
+  <div class="lay" id="lay2">
+    <input type="checkbox" id="L_dig" hidden><label for="L_dig" hidden>Proposed creek digs</label>
+    <input type="checkbox" id="L_con"><span class="opt"><label for="L_con">Cumulative connectivity</label><select id="conper" title="from when the depth over the connections is summed"></select></span>
+    <input type="checkbox" id="L_in"><label for="L_in">Freshwater inflow cell 56–57 → cell 52</label>
+    <input type="checkbox" id="L_mon" checked><span class="opt"><label for="L_mon">Monthly maps</label><select id="monvar" title="monthly mean per cell, the classes of the report maps"><option value="salinity">Salinity</option><option value="water_level">Water level</option><option value="connectivity">Connectivity</option></select></span>
+    <input type="checkbox" id="L_ctd" checked><label for="L_ctd">CTD gauges 2026</label>
+    <input type="checkbox" id="L_ins" checked><label for="L_ins">Aquadopp and CTD, no data yet</label>
+  </div>
+  <details><summary>Settings</summary>
+    <div class="set">
+      <span>Colour range</span><span><input type="number" id="lo" step="any"> – <input type="number" id="hi" step="any"></span>
+      <label for="auto" id="autolbl">Auto range (this day)</label><input type="checkbox" id="auto">
+      <span>Palette</span><select id="pal"></select>
+      <span id="paintlbl">Paint</span><select id="paint"><option value="wet">wet area only</option><option value="cell">whole cells</option></select>
+      <span>Opacity</span><input type="range" id="op" min="0.2" max="1" step="0.05" value="0.9">
+      <span id="speedlbl">Playback speed</span><select id="speed"><option value="250">slow</option><option value="90" selected>normal</option><option value="30">fast</option></select>
+    </div>
+  </details>
+  <div id="note" hidden></div>
+</div>
+<div id="legend" class="card"><div id="ltitle"></div><canvas id="lbar"></canvas><div id="lnote" hidden></div><div id="lextra"></div></div>
+<div id="tip"></div>
+<div id="series" class="card" hidden><div class="h"><span id="stitle"></span><span class="sb"><button id="sprev" title="previous day (←)">‹</button><button id="splay" title="play / pause (space)">▶</button><button id="snext" title="next day (→)">›</button><button id="sclose" title="close">×</button></span></div><div id="slegend"></div><canvas id="chart" title="click or drag to change the date"></canvas><div id="snote" hidden></div></div>
+<div id="foot"></div>
+<div id="attr" hidden>Imagery © Esri, Maxar, Earthstar Geographics</div>
+<script src="data/base_data.js?v=202611140045"></script>
+<script>
+const $=id=>document.getElementById(id),dpr=Math.max(1,window.devicePixelRatio||1);
+const b64=(s,T)=>{const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new T(u.buffer)};
+const BA=window.BASE,G=BA.dem,B=BA.bounds,CELLS=BA.cells,LINKS=BA.links,RW=G.w,RH=G.h,Z=b64(G.z,Uint16Array),CID=b64(G.cell,Uint8Array),DS=BA.datasets;
+const hs=new Image();hs.src="data:image/png;base64,"+G.hs;
+const STN=BA.stations||[],ORGC={NOAA:"#1f5fbf",TWDB:"#e07b00",NCEI:"#7b3fb5",USGS:"#2a9d4b"};
+const LAY=BA.layers||{},DIGS=LAY.digs?LAY.digs.items:[],CI=LAY.conn||null,CONN=CI?CI.pairs:[],INF=LAY.inflow||null,CTD=LAY.ctd||null,CTS=CTD?CTD.sites:[];let selCtd=null;
+const MON=LAY.monthly||null;   // monthly maps: class per cell and month (salinity, water level, connectivity), the colours of the report figures
+function monOn(){return !!MON&&$("L_mon").checked&&ready()&&kind()=="icm"&&!isStatic()}
+function monIdx(){return MON&&ready()?MON.months.indexOf(dates()[ti].slice(0,7)):-1}
+function monVar(){return MON.vars[$("monvar").value]}
+function monCells(op){const j=monIdx();if(j<0)return;const M=monVar(),c=M.c[j];ctx.globalAlpha=op;
+ CELLS.forEach((cl,i)=>{const col=i==MON.bay&&M.bay_col?M.bay_col:c[i]>=0?M.cols[c[i]]:null;if(!col)return;ctx.fillStyle=col;path(cl);ctx.fill()});ctx.globalAlpha=1}
+function monStep(d,wrap){const D=dates(),n=MON.months.length;let j=MON.months.indexOf(D[ti].slice(0,7));if(j<0)j=d>0?-1:n;j+=d;
+ if(wrap)j=(j+n)%n;else j=Math.min(n-1,Math.max(0,j));const m=MON.months[j];let k=D.indexOf(m+"-15");if(k<0)k=D.findIndex(x=>x.startsWith(m));if(k>=0)ti=k}
+// ---------------- satellite basemap: Esri World Imagery tiles (imagery only, no labels) ----------------
+const TILES=new Map();let tileRAF=0;
+const lon2x=(lon,z)=>(lon+180)/360*2**z,lat2y=(lat,z)=>{const r=lat*Math.PI/180;return(1-Math.log(Math.tan(r)+1/Math.cos(r))/Math.PI)/2*2**z};
+const x2lon=(x,z)=>x/2**z*360-180,y2lat=(y,z)=>{const n=Math.PI-2*Math.PI*y/2**z;return 180/Math.PI*Math.atan(.5*(Math.exp(n)-Math.exp(-n)))};
+function tile(z,x,y){const k=z+"/"+x+"/"+y;let t=TILES.get(k);if(!t){t=new Image();t.crossOrigin="anonymous";
+ t.onload=()=>{if(!tileRAF)tileRAF=setTimeout(()=>{tileRAF=0;draw()},60)};t.src=`https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/${z}/${y}/${x}`;TILES.set(k,t)}return t}
+function satellite(W,H){const a=inv(0,0),b=inv(W,H),mpp=110574/(fit.s*view.k)/dpr,lat=(a[1]+b[1])/2;
+ let z=Math.max(3,Math.min(18,Math.round(Math.log2(40075016.7*Math.cos(lat*Math.PI/180)/(256*mpp)))));
+ const range=z=>[Math.floor(lon2x(a[0],z)),Math.floor(lon2x(b[0],z)),Math.floor(lat2y(a[1],z)),Math.floor(lat2y(b[1],z))];
+ let r=range(z);while((r[1]-r[0]+1)*(r[3]-r[2]+1)>150&&z>3)r=range(--z);
+ for(const zz of [Math.max(3,z-3),z]){const q=range(zz);   // coarse level first, so the map is never blank while detail loads
+  for(let x=q[0];x<=q[1];x++)for(let y=q[2];y<=q[3];y++){const t=tile(zz,x,y);if(!t.complete||!t.naturalWidth)continue;
+   const p=P(x2lon(x,zz),y2lat(y,zz)),s=P(x2lon(x+1,zz),y2lat(y+1,zz));ctx.drawImage(t,p[0],p[1],s[0]-p[0]+.6,s[1]-p[1]+.6)}}}
+const PALS={ocean:[[0,"#14213d"],[.2,"#1f4e79"],[.4,"#2a7f8f"],[.6,"#5fb49c"],[.8,"#c9d99a"],[1,"#f4e3a1"]],
+ viridis:[[0,"#440154"],[.25,"#3b528b"],[.5,"#21918c"],[.75,"#5ec962"],[1,"#fde725"]],
+ thermal:[[0,"#1b0c41"],[.25,"#65156e"],[.5,"#b63458"],[.75,"#ec6f3a"],[1,"#fbe06f"]],
+ blues:[[0,"#eef5fb"],[.35,"#9cc3e3"],[.7,"#3f7fbf"],[1,"#15306b"]],greys:[[0,"#f4f4f2"],[1,"#262a28"]],
+ terrain:[[0,"#15397a"],[.2,"#2f78b7"],[.3,"#7cc3d6"],[.38,"#cfe8b8"],[.5,"#8fc46f"],[.66,"#e3d58a"],[.82,"#b98450"],[1,"#f3eee6"]],
+ diverging:[[0,"#2166ac"],[.25,"#67a9cf"],[.5,"#f7f7f7"],[.75,"#ef8a62"],[1,"#b2182b"]]};
+const VARS={icm:{salinity:{name:"Salinity",unit:"ppt",key:"salinity",lo:0,hi:35,pal:"ocean",dec:1},
+  temperature:{name:"Water temperature",unit:"°C",key:"temperature",lo:5,hi:35,pal:"thermal",dec:1},
+  stage:{name:"Water level",unit:"m NAVD88",key:"stage",lo:0,hi:1.2,pal:"blues",dec:2},
+  depth:{name:"Inundation depth",unit:"m",key:"depth",lo:0,hi:1,pal:"blues",dec:2},
+  flow:{name:"Flows between cells",unit:"m³/s"}},
+ schism:{salinity:{name:"Salinity",unit:"psu",lo:0,hi:35,pal:"ocean",dec:1},
+  temperature:{name:"Water temperature",unit:"°C",q:"temp_s",lo:5,hi:35,pal:"thermal",dec:1},
+  depth:{name:"Water depth",unit:"m",q:"depth",lo:0,hi:1.2,pal:"blues",dec:2},
+  currents:{name:"Currents, depth-averaged",unit:"m/s"}}};
+// static maps from the 2.2 x 2.5 m lidar grids (they do not change with the date)
+const STATIC={elev3:{name:"Ground elevation – corrected lidar (v6)",opt:"Elevation – corrected lidar",unit:"m NAVD88",lo:-0.5,hi:2,pal:"terrain",dec:2,
+  note:"Corrected lidar: the original ponds are unchanged; the creeks and the hand-drawn channel connections get a smooth bowl-shaped bed, shallow at the banks and deeper in the middle, fitted to the GNSS survey."},   // opt: shorter text that fits the closed select
+ elevo:{name:"Ground elevation – original lidar",opt:"Elevation – original lidar",unit:"m NAVD88",lo:-0.5,hi:2,pal:"terrain",dec:2},
+ elevd:{name:"Correction: corrected minus original",opt:"Corrected − original lidar",unit:"m",lo:-0.5,hi:0.5,pal:"diverging",dec:2,note:"transparent: no correction, or within ±1 cm (the rounding step of both maps)"}};
+const LAYER={sal_s:"surface",sal_da:"depth-averaged",sal_b:"bottom"};
+let ds=DS[0],I=null,SC=null,cur="salinity",layer="sal_s",sel=null,timer=null,ti=0,view={k:1,x:0,y:0},fit={s:1,x:0,y:0};
+const isStatic=()=>!!STATIC[cur];
+const kind=()=>ds.kind,V=()=>STATIC[cur]||VARS[kind()][cur],ready=()=>kind()=="icm"?!!I:!!SC,dates=()=>kind()=="icm"?I.dates:SC.W.dates,arrowVar=()=>cur=="flow"||cur=="currents";
+const ST={};function st(){const k=(isStatic()?"lidar":ds.id)+":"+cur;if(!ST[k]){const v=V();ST[k]={lo:v.lo,hi:v.hi,pal:v.pal||"ocean",auto:false}}return ST[k]}
+const hex=h=>[1,3,5].map(i=>parseInt(h.slice(i,i+2),16));
+function rampRGB(P,f){f=f<0?0:f>1?1:f;for(let i=1;i<P.length;i++)if(f<=P[i][0]){const a=hex(P[i-1][1]),b=hex(P[i][1]),k=(f-P[i-1][0])/(P[i][0]-P[i-1][0]);return a.map((x,j)=>Math.round(x+(b[j]-x)*k))}return hex(P[P.length-1][1])}
+const palRGB=(p,f)=>rampRGB(PALS[p],f);
+const LUTS={};function lut(p){if(!LUTS[p]){const a=new Uint8Array(768);for(let i=0;i<256;i++)a.set(palRGB(p,i/255),i*3);LUTS[p]=a}return LUTS[p]}
+const cosl=Math.cos((B.lat0+B.lat1)/2*Math.PI/180);
+function P(lon,lat){const bx=(lon-B.lon0)*cosl,by=B.lat1-lat;return[(fit.x+bx*fit.s)*view.k+view.x,(fit.y+by*fit.s)*view.k+view.y]}
+function inv(x,y){const bx=((x-view.x)/view.k-fit.x)/fit.s,by=((y-view.y)/view.k-fit.y)/fit.s;return[B.lon0+bx/cosl,B.lat1-by]}
+const cv=$("map"),ctx=cv.getContext("2d");
+function resize(){const W=innerWidth,H=innerHeight;cv.width=W*dpr;cv.height=H*dpr;const bw=(B.lon1-B.lon0)*cosl,bh=B.lat1-B.lat0,pad=36;
+ fit.s=Math.min((W-2*pad)/bw,(H-2*pad)/bh);fit.x=(W-bw*fit.s)/2;fit.y=(H-bh*fit.s)/2;
+ const pl=$("panel").getBoundingClientRect().right+12;   // narrow window: keep the marsh clear of the control panel
+ if(fit.x<pl&&W-pl-pad>W/2){fit.s=Math.min(fit.s,(W-pl-pad)/bw);fit.x=Math.max(pl,(W-bw*fit.s)/2);fit.y=(H-bh*fit.s)/2}draw()}
+// ---------------- datasets (lazy loading) ----------------
+function decodeSchism(W){const g=W.grid;SC={W,g,idx:b64(g.idx,Int32Array),bed:b64(g.bed,Int16Array),q:{},cu:b64(W.cur.u,Int8Array),cvv:b64(W.cur.v,Int8Array)};
+ SC.n=SC.idx.length;for(const k in W.q)SC.q[k]={lo:W.q[k].lo,hi:W.q[k].hi,a:b64(W.q[k].data,Uint8Array)};
+ SC.rev=new Int32Array(g.w*g.h).fill(-1);SC.idx.forEach((p,k)=>SC.rev[p]=k);SC.off=document.createElement("canvas");SC.off.width=g.w;SC.off.height=g.h;SC.ctx=SC.off.getContext("2d");SC.img=SC.ctx.createImageData(g.w,g.h)}
+const cache={};
+function loadDS(d,done,fail){const use=()=>{if(d.kind=="icm")I=window[d.glob];else{if(!cache[d.id]){decodeSchism(window[d.glob]);cache[d.id]=SC}SC=cache[d.id]}done()};
+ if(window[d.glob])return use();const n=$("note");n.hidden=false;n.textContent="Loading "+d.label+"…";const s=document.createElement("script");s.src=d.file;
+ s.onload=()=>{n.hidden=true;use()};s.onerror=()=>{n.textContent="Not available yet: "+d.file;fail&&fail()};document.head.appendChild(s)}
+const qkey=()=>cur=="salinity"?layer:VARS.schism[cur].q;
+function sval(key,k,t){const q=SC.q[key],c=q.a[t*SC.n+k];return c===255?null:q.lo+(q.hi-q.lo)*c/254}
+// ---------------- fine lidar: original (bathy_lidar 2018) and corrected (DEM v3), 1 cm codes ----------------
+const LD={ready:false,busy:false,err:null,hsc:{},sc:null,sk:"",cb:null,bmap:null,digErr:null};
+async function inflate(s){const bin=atob(s),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);
+ const st=new Blob([u]).stream().pipeThrough(new DecompressionStream("deflate"));return new Uint8Array(await new Response(st).arrayBuffer())}
+function unmed(u,w,h){const n=w*h,o=new Int16Array(n);   // zig-zag residual planes -> MED (LOCO-I) prediction undone row by row
+ for(let r=0,i=0;r<h;r++)for(let c=0;c<w;c++,i++){const z=u[i]|(u[n+i]<<8),res=(z>>>1)^-(z&1),a=c?o[i-1]:0,b=r?o[i-w]:0,d=(r&&c)?o[i-w-1]:0;
+  let p;if(d>=(a>b?a:b))p=a<b?a:b;else if(d<=(a<b?a:b))p=a>b?a:b;else p=a+b-d;o[i]=p+res}return o}
+async function decodeLidar(L){if(typeof DecompressionStream=="undefined")throw new Error("this browser has no DecompressionStream");
+ const [a,b]=await Promise.all([inflate(L.z3),inflate(L.dz)]);const n=L.w*L.h;if(a.length!=2*n||b.length!=2*n)throw new Error("lidar payload has the wrong size");
+ const c3=unmed(a,L.w,L.h),dc=unmed(b,L.w,L.h);let s3=0,sd=0,nv=0;const h3=new Uint32Array(65536),ho=new Uint32Array(65536),hd=new Uint32Array(65536);
+ for(let i=0;i<n;i++){const k=c3[i];if(!k)continue;nv++;s3=(s3+k)%4294967296;sd+=dc[i];h3[k]++;ho[k-dc[i]]++;if(dc[i])hd[dc[i]+32768]++}
+ const C=L.check;if(s3!=C.sum3||sd!=C.sumd||nv!=C.n_valid||C.samples.some(([i,k,d])=>c3[i]!=k||dc[i]!=d))throw new Error("lidar check sums do not match");
+ Object.assign(LD,{L,w:L.w,h:L.h,c3,dc,hist:{elev3:[h3,0],elevo:[ho,0],elevd:[hd,32768]}});delete L.z3;delete L.dz}
+function loadScript(file,glob){return new Promise((ok,no)=>{if(window[glob])return ok(window[glob]);const s=document.createElement("script");s.src=file;
+ s.onload=()=>window[glob]?ok(window[glob]):no(new Error("empty "+file));s.onerror=()=>no(new Error("missing "+file));document.head.appendChild(s)})}
+function applyDigs(DG){const n=LD.w*LD.h,cb=LD.c3.slice(),map=new Map();let i=0,s=0;   // sparse list: index step, code change (cm), corridor
+ for(let j=0;j<DG.i.length;j++){i+=DG.i[j];if(i>=n||!cb[i]||DG.d[j]>=0)throw new Error("dig burn entry "+j+" is invalid");cb[i]+=DG.d[j];s+=DG.d[j];map.set(i,j)}
+ if(DG.i.length!=DG.check.n||s!=DG.check.sumd||i!=DG.check.last)throw new Error("dig burn check sums do not match");
+ const hb=LD.hist.elev3[0].slice();for(const i of map.keys()){hb[LD.c3[i]]--;hb[cb[i]]++}
+ Object.assign(LD,{cb,bmap:map,DG});LD.hist.elevb=[hb,0]}
+function loadLidar(){const f=BA.lidar;if(!f||LD.busy||LD.ready)return;LD.busy=true;
+ loadScript(f.file,f.glob).then(decodeLidar)
+  .then(()=>f.digs?loadScript(f.digs.file,f.digs.glob).then(applyDigs).catch(err=>{LD.digErr=String(err.message||err);console.error("proposed digs:",err)}):(LD.digErr="no dig file"))
+  .then(()=>{LD.ready=true}).catch(err=>{LD.err=String(err.message||err);if(!/^missing /.test(LD.err))console.error("lidar:",err)}).finally(()=>{LD.busy=false;digOptions();draw()})}
+function digOptions(){const off=!LD.cb,why=off?"not available"+(LD.digErr?": "+LD.digErr:""):"";   // the proposal options need data/lidar_digs.js
+ for(const o of[...$("lidar").options,...$("var").options])if(o.value=="dig"||o.value=="elevb"){o.disabled=off&&LD.ready;if(off&&LD.ready)o.title=why}
+ if(off&&LD.ready){if($("lidar").value=="dig")$("lidar").value="v3";if(cur=="elevb"){cur="elev3";$("var").value=cur}}}
+const zAt=(i,which)=>{const k=LD.c3[i];if(!k)return null;return((which=="orig"?k-LD.dc[i]:which=="dig"&&LD.cb?LD.cb[i]:k)/100)-LD.L.zoff};
+function lidarAt(lon,lat){if(!LD.ready)return null;const L=LD.L,c=Math.floor((lon-L.lon0)/(L.lon1-L.lon0)*L.w),r=Math.floor((L.lat1-lat)/(L.lat1-L.lat0)*L.h);
+ if(c<0||r<0||c>=L.w||r>=L.h)return null;const i=r*L.w+c;if(!LD.c3[i])return null;const j=LD.bmap?LD.bmap.get(i):undefined;
+ return{v3:zAt(i,"v3"),orig:zAt(i,"orig"),d:LD.dc[i]/100,dig:j==null?null:{z:zAt(i,"dig"),id:LD.DG.ids[LD.DG.k[j]],bed:LD.DG.bed[LD.DG.k[j]]}}}
+function hillshade(which){if(which=="dig"&&!LD.cb)which="v3";if(LD.hsc[which])return LD.hsc[which];const w=LD.w,h=LD.h,c3=LD.c3,dc=LD.dc,o=which=="orig",zg=which=="dig"?LD.cb:c3,n=w*h,H=new Float32Array(n),dx=2*LD.L.px_m[0]*100,dy=2*LD.L.px_m[1]*100;
+ const zc=i=>o?c3[i]-dc[i]:zg[i],alt=Math.PI/4,az=7*Math.PI/4,sa=Math.sin(alt),ca=Math.cos(alt)*Math.cos(az),cb=-Math.cos(alt)*Math.sin(az);
+ let s=0,s2=0,m=0;   // same light and contrast stretch as the 10 m hillshade of build_viewer.py (sun 315°, 45° high)
+ for(let r=0,i=0;r<h;r++)for(let c=0;c<w;c++,i++){if(!c3[i]){H[i]=NaN;continue}const z=zc(i);
+  const zl=c>0&&c3[i-1]?zc(i-1):z,zr=c<w-1&&c3[i+1]?zc(i+1):z,zu=r>0&&c3[i-w]?zc(i-w):z,zd=r<h-1&&c3[i+w]?zc(i+w):z;
+  const gx=(zr-zl)/dx,gy=(zd-zu)/dy,v=(sa+ca*gy+cb*gx)/Math.sqrt(1+gx*gx+gy*gy);H[i]=v;s+=v;s2+=v*v;m++}
+ const mu=s/m,sd=Math.sqrt(Math.max(1e-12,s2/m-mu*mu)),cvs=document.createElement("canvas");cvs.width=w;cvs.height=h;const g=cvs.getContext("2d"),im=g.createImageData(w,h),px=im.data;
+ for(let i=0,q=0;i<n;i++,q+=4){const v=H[i];if(v!==v){px[q+3]=0;continue}let t=.55+.45*(v-mu)/(3*sd);t=t<0?0:t>1?1:t;const gv=Math.round((t*.92+.05)*255);px[q]=px[q+1]=px[q+2]=gv;px[q+3]=255}
+ g.putImageData(im,0,0);return LD.hsc[which]=cvs}
+function staticCanvas(){const s=st(),key=[cur,s.pal,s.lo,s.hi].join("|");if(LD.sc&&LD.sk==key)return LD.sc;
+ const w=LD.w,h=LD.h,n=w*h,c3=LD.c3,dc=LD.dc,cb=LD.cb||c3,L=lut(s.pal),span=(s.hi-s.lo)||1,zo=LD.L.zoff;if(!LD.sc){LD.sc=document.createElement("canvas");LD.sc.width=w;LD.sc.height=h;LD.sim=LD.sc.getContext("2d").createImageData(w,h)}
+ const px=LD.sim.data;
+ for(let i=0,q=0;i<n;i++,q+=4){const k=c3[i];if(!k||(cur=="elevd"&&dc[i]>=-1&&dc[i]<=1)){px[q+3]=0;continue}   // no data, or no correction beyond the 1 cm rounding (else 0/1 cm bands draw rings, e.g. cells 47/49): transparent
+  const v=cur=="elevd"?dc[i]/100:(cur=="elevo"?k-dc[i]:cur=="elevb"?cb[i]:k)/100-zo;let j=Math.round((v-s.lo)/span*255);j=j<0?0:j>255?255:j;px[q]=L[j*3];px[q+1]=L[j*3+1];px[q+2]=L[j*3+2];px[q+3]=255}
+ LD.sc.getContext("2d").putImageData(LD.sim,0,0);LD.sk=key;return LD.sc}
+// ---------------- painting ----------------
+const off=document.createElement("canvas");off.width=RW;off.height=RH;const octx=off.getContext("2d"),img=octx.createImageData(RW,RH);
+function autoRange(){let a=[];
+ if(isStatic()){if(!LD.ready)return;const [hh,o]=LD.hist[cur];let tot=0;for(let k=0;k<hh.length;k++)tot+=hh[k];if(!tot)return;   // whole map, from the code histogram
+  const q=f=>{let c=0,t=f*(tot-1);for(let k=0;k<hh.length;k++){c+=hh[k];if(c>t)return cur=="elevd"?(k-o)/100:k/100-LD.L.zoff}return 0};
+  let lo=q(.02),hi=q(.98);if(cur=="elevd"){const m=Math.max(Math.abs(lo),Math.abs(hi));lo=-m;hi=m}if(hi-lo<1e-6)hi=lo+1;st().lo=+lo.toFixed(2);st().hi=+hi.toFixed(2);return}
+ if(kind()=="icm"){const k=cur=="depth"?"depth":V().key;a=I.vars[k][ti].filter(v=>v!=null)}else{const key=qkey();for(let k=0;k<SC.n;k+=3){const v=sval(key,k,ti);if(v!=null)a.push(v)}}
+ if(!a.length)return;a.sort((x,y)=>x-y);const q=f=>a[Math.min(a.length-1,Math.max(0,Math.round(f*(a.length-1))))];let lo=q(.02),hi=q(.98);if(hi-lo<1e-6)hi=lo+1;st().lo=+lo.toFixed(2);st().hi=+hi.toFixed(2)}
+function paintICM(){const px=img.data,s=st(),stg=I.vars.stage[ti],wet=$("paint").value=="wet"||cur=="depth",vals=(cur=="depth"||cur=="flow")?null:I.vars[V().key][ti],L=lut(s.pal),span=(s.hi-s.lo)||1;
+ for(let p=0,o=0;p<RW*RH;p++,o+=4){const c=CID[p];if(c===255||Z[p]===0){px[o+3]=0;continue}const d=stg[c]-(Z[p]/1000-1);
+  if(cur=="flow"){if(d>0.02){px[o]=156;px[o+1]=196;px[o+2]=214;px[o+3]=150}else px[o+3]=0;continue}
+  if(wet&&d<=0.02){px[o+3]=0;continue}const v=cur=="depth"?d:vals[c];if(v==null){px[o+3]=0;continue}
+  let i=Math.round((v-s.lo)/span*255);i=i<0?0:i>255?255:i;px[o]=L[i*3];px[o+1]=L[i*3+1];px[o+2]=L[i*3+2];px[o+3]=255}octx.putImageData(img,0,0)}
+function paintSchism(){const px=SC.img.data;px.fill(0);const n=SC.n,o=ti*n;
+ if(cur=="currents"){const d=SC.q.depth.a;for(let k=0;k<n;k++){const c=d[o+k];if(c===255||c===0)continue;const p=SC.idx[k]*4;px[p]=156;px[p+1]=196;px[p+2]=214;px[p+3]=150}}
+ else{const s=st(),L=lut(s.pal),span=(s.hi-s.lo)||1,q=SC.q[qkey()],a=q.a,qs=(q.hi-q.lo)/254;
+  for(let k=0;k<n;k++){const c=a[o+k];if(c===255)continue;let i=Math.round((q.lo+qs*c-s.lo)/span*255);i=i<0?0:i>255?255:i;const p=SC.idx[k]*4;px[p]=L[i*3];px[p+1]=L[i*3+1];px[p+2]=L[i*3+2];px[p+3]=255}}
+ SC.ctx.putImageData(SC.img,0,0)}
+function path(c){ctx.beginPath();for(const r of c.rings){r.forEach((p,k)=>{const q=P(p[0],p[1]);k?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])});ctx.closePath()}}
+function drawBox(im,g,alpha){const a=P(g.lon0,g.lat1),b=P(g.lon1,g.lat0);ctx.globalAlpha=alpha;ctx.drawImage(im,a[0],a[1],b[0]-a[0],b[1]-a[1]);ctx.globalAlpha=1}
+function relief(alpha,mode,dem){const which=dem||$("lidar").value;
+ if(LD.ready){const im=hillshade(which);ctx.globalCompositeOperation=mode||"source-over";drawBox(im,LD.L,alpha);ctx.globalCompositeOperation="source-over";return}
+ if(which=="orig"&&hs.complete)drawBox(hs,G,alpha)}   // 10 m hillshade of the original lidar until the fine grids are ready
+function draw(){const W=innerWidth,H=innerHeight;ctx.setTransform(dpr,0,0,dpr,0,0);ctx.clearRect(0,0,W,H);
+ const sat=$("L_sat").checked,a=P(G.lon0,G.lat1),b=P(G.lon1,G.lat0),op=+$("op").value,stat=isStatic(),rel=$("L_rel").checked,mod=$("L_mod").checked;ctx.imageSmoothingEnabled=true;$("attr").hidden=!sat;
+ $("L_modlbl").textContent=stat?"Lidar map":"Model values";   // the same box shows / hides a model variable or a static lidar map
+ if(sat){ctx.fillStyle="#29322d";ctx.fillRect(0,0,W,H);satellite(W,H)}
+ const statElev=stat&&mod&&cur!="elevd"&&LD.ready;   // an elevation map is shaded with its own lidar on top (below)
+ if(rel&&!statElev)relief(sat?.5:.85);
+ lidarNote();
+ if(!ready()){stations();scalebar(W,H);return}
+ if(!arrowVar()&&st().auto)autoRange();
+ if(stat){if(LD.ready&&mod){drawBox(staticCanvas(),LD.L,op);if(rel&&cur!="elevd")relief(.6,"multiply",cur=="elevo"?"orig":cur=="elevb"?"dig":"v3")}}   // an elevation map is shaded with its own lidar
+ else if(monOn())monCells(op);
+ else if(mod){
+  if(kind()=="icm"){const cellPaint=$("paint").value=="cell"&&cur!="depth"&&cur!="flow";
+   if(!cellPaint){paintICM();ctx.globalAlpha=cur=="flow"?1:op;ctx.drawImage(off,a[0],a[1],b[0]-a[0],b[1]-a[1])}ctx.globalAlpha=1;
+   if(cellPaint){const v=I.vars[V().key][ti],s=st();CELLS.forEach((c,i)=>{if(v[i]==null)return;ctx.fillStyle=`rgba(${palRGB(s.pal,(v[i]-s.lo)/((s.hi-s.lo)||1))},${op})`;path(c);ctx.fill()})}}
+  else{paintSchism();const g=SC.g,c0=P(g.lon0,g.lat1),c1=P(g.lon1,g.lat0);ctx.globalAlpha=cur=="currents"?1:op;ctx.drawImage(SC.off,c0[0],c0[1],c1[0]-c0[0],c1[1]-c0[1]);ctx.globalAlpha=1}}
+ if($("L_con").checked&&!stat)connCells();
+ if($("L_in").checked)basins();
+ extraCells();
+ if($("outl").checked){ctx.lineJoin="round";ctx.strokeStyle="rgba(255,255,255,.55)";ctx.lineWidth=2.6;CELLS.forEach(c=>{path(c);ctx.stroke()});
+  ctx.strokeStyle="rgba(16,22,19,.9)";ctx.lineWidth=1.1;CELLS.forEach(c=>{path(c);ctx.stroke()})}
+ if(kind()=="icm"&&sel!=null&&sel!="all"){ctx.strokeStyle="#e4572e";ctx.lineWidth=2.6;path(CELLS[sel]||xcell(sel));ctx.stroke()}
+ if(kind()=="schism"&&sel!=null){const q=P(sel.lon,sel.lat);ctx.strokeStyle="#e4572e";ctx.lineWidth=2;ctx.beginPath();ctx.arc(q[0],q[1],6,0,7);ctx.stroke()}
+ if(mod&&!stat){if(cur=="flow")flowArrows();if(cur=="currents")currentArrows()}
+ if($("L_con").checked&&!stat)connLines();
+ if($("L_dig").checked)digLines();
+ if($("lbl").checked&&110574/(fit.s*view.k)<25){ctx.font="600 11px system-ui";ctx.textAlign="center";ctx.textBaseline="middle";ctx.lineJoin="round";ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=3;ctx.fillStyle="#141a17";   // no cell numbers when zoomed far out (they would pile up)
+  CELLS.forEach(c=>{const q=P(c.cx,c.cy);ctx.strokeText(c.id,q[0],q[1]);ctx.fillText(c.id,q[0],q[1])});
+  for(const p of XC){const q=P(p.lab[0],p.lab[1]);ctx.strokeText(p.id,q[0],q[1]);ctx.fillText(p.id,q[0],q[1])}}
+ if($("L_dig").checked)digLabels();
+ if($("L_in").checked)inflowPoints();
+ if(kind()=="icm"&&$("L_ctd").checked)ctdPoints();
+ if($("L_ins").checked)insPoints();
+ stations();scalebar(W,H);legend();syncSettings();$("date").textContent=monOn()&&monIdx()>=0?MON.month_labels[monIdx()]:dates()[ti];$("t").value=ti;
+ $("timectl").hidden=stat;$("series").hidden=sel==null||stat;placeSeries();if(sel!=null&&!stat){chart();if(placeSeries())chart()}refreshTip()}
+function placeSeries(){const s=$("series"),lg=$("legend");if(s.hidden){lg.style.maxHeight="";return false}   // small window: keep the chart clear of the panel, and the legend clear of the chart
+ const W=innerWidth,pr=$("panel").getBoundingClientRect(),w0=s.style.width;let w=Math.min(760,W-24),left=(W-w)/2;
+ if(left<pr.right+12&&innerHeight-36-s.offsetHeight<pr.bottom+8){const l2=pr.right+12,w2=Math.min(760,W-l2-12);if(w2>=440){left=l2;w=w2}}
+ s.style.transform="none";s.style.left=left+"px";s.style.width=w+"px";
+ const r=s.getBoundingClientRect(),lr=lg.getBoundingClientRect();lg.style.maxHeight=lr.right>r.left&&lr.left<r.right?Math.max(120,r.top-24)+"px":"";return s.style.width!=w0}
+let lastMove=null;   // a tooltip that is showing follows the date (play, keys, chart) and the zoom
+function refreshTip(){if(lastMove&&lastMove.target===cv&&!drag&&!cdrag&&$("tip").style.display=="block")hover(lastMove)}
+function lidarNote(){{const n=$("note");if(n.textContent.startsWith("Connectivity not available")&&!$("L_con").checked)n.hidden=true}const n=$("note"),need=isStatic()||$("L_rel").checked&&$("lidar").value!="orig";if(n.textContent.startsWith("Loading "+(ds.label||""))&&!ready())return;
+ if(need&&!LD.ready){n.hidden=false;n.textContent=LD.err?"Fine lidar not available: "+LD.err:"Loading the fine lidar…";if(!LD.busy&&!LD.err)loadLidar()}else if(n.textContent.includes("lidar"))n.hidden=true}
+// ---------------- arrows ----------------
+const mag=v=>Math.log10(Math.abs(v)/5e-4+1),curLen=s=>6+34*Math.sqrt(Math.min(s,1));
+function arrow(g,x,y,ang,len,lw,col){g.save();g.translate(x,y);g.rotate(ang);g.strokeStyle=col;g.fillStyle=col;g.lineWidth=lw;
+ g.beginPath();g.moveTo(-len/2,0);g.lineTo(len/2-4,0);g.stroke();g.beginPath();g.moveTo(len/2+4,0);g.lineTo(len/2-5,-4);g.lineTo(len/2-5,4);g.closePath();g.fill();g.restore()}
+function flowArrows(){const q=I.flow[ti],L=LINKS;for(let i=0;i<q.length;i++){const v=q[i];if(v==null||Math.abs(v)<5e-4)continue;const s=Math.sign(v),p=P(L.mx[i],L.my[i]),m=mag(v);
+ arrow(ctx,p[0],p[1],Math.atan2(-L.dy[i]*s,L.dx[i]*s),6+9*m,1+1.2*m,L.type[i]==1?"#123b5e":"#1f8a70")}}
+function currentArrows(){const C=SC.W.cur,n=C.lon.length,o=ti*n;for(let k=0;k<n;k++){const u=SC.cu[o+k],v=SC.cvv[o+k];if(u===-128||v===-128)continue;const sp=Math.hypot(u,v)/100;if(sp<0.004)continue;
+ const p=P(C.lon[k],C.lat[k]);arrow(ctx,p[0],p[1],Math.atan2(-v,u),curLen(sp),1.3,"#123b5e")}}
+// ---------------- extra layers: cumulative connectivity, freshwater inflow cell 56–57 → cell 52 (and the unused creek-dig layer) ----------------
+const DIGC="#ff8a1c",DIGO="rgba(255,226,170,.9)";
+function polyline(pts){ctx.beginPath();pts.forEach((p,k)=>{const q=P(p[0],p[1]);k?ctx.lineTo(q[0],q[1]):ctx.moveTo(q[0],q[1])})}
+// ---------------- cumulative connectivity: every hour two neighbouring cells are connected, the water depth over the
+// connection is added to the cell the water goes into; data/connectivity.js holds the daily sums per pair and direction and
+// is loaded when the layer is first switched on; the page sums them from the chosen start to the day shown
+const CUMPAL=[[0,"#ffffd9"],[.2,"#c7e9b4"],[.4,"#7fcdbb"],[.6,"#41b6c4"],[.8,"#225ea8"],[1,"#081d58"]];
+const CD={ready:false,busy:false,err:null};
+async function loadConn(){if(!CI||CD.ready||CD.busy)return;CD.busy=true;CD.err=null;const nt=$("note");nt.hidden=false;nt.textContent="Loading the connectivity series…";
+ try{const W=await loadScript(CI.file,CI.glob),u=await inflate(W.data),K=CONN.length,n=CI.nd,NC=CELLS.length,un=CI.unit;
+  if(u.length!=5*K*n)throw new Error("connectivity payload has the wrong size");
+  const qa=new Uint16Array(u.buffer,u.byteOffset,K*n),qb=new Uint16Array(u.buffer,u.byteOffset+2*K*n,K*n),qh=u.subarray(4*K*n);   // pair-major: a->b, b->a (1e-4 m·day), hours
+  const PA=new Float64Array(K*(n+1)),PB=new Float64Array(K*(n+1)),PH=new Float64Array(K*(n+1)),RD=new Float64Array(NC*n),SD=new Float64Array(NC*n),PR=new Float64Array(NC*(n+1)),PS=new Float64Array(NC*(n+1));
+  let sa=0,sb=0,sh=0;
+  for(let k=0;k<K;k++){const o=k*(n+1),q=k*n,a=CONN[k].a,b=CONN[k].b;
+   for(let d=0;d<n;d++){const va=qa[q+d],vb=qb[q+d],hh=qh[q+d];sa+=va;sb+=vb;sh+=hh;PA[o+d+1]=PA[o+d]+va*un;PB[o+d+1]=PB[o+d]+vb*un;PH[o+d+1]=PH[o+d]+hh;RD[b*n+d]+=va*un;RD[a*n+d]+=vb*un;SD[a*n+d]+=va*un;SD[b*n+d]+=vb*un}}
+  if(sa!=W.check.a||sb!=W.check.b||sh!=W.check.h)throw new Error("connectivity check sums do not match");
+  for(let c=0;c<NC;c++){const o=c*(n+1);for(let d=0;d<n;d++){PR[o+d+1]=PR[o+d]+RD[c*n+d];PS[o+d+1]=PS[o+d]+SD[c*n+d]}if(Math.abs(PR[o+n]-W.cell_total[c])>0.01)throw new Error("connectivity cell totals do not match")}
+  Object.assign(CD,{PA,PB,PH,PR,PS,n,ready:true});delete W.data;if(nt.textContent.startsWith("Loading the connectivity"))nt.hidden=true}
+ catch(e){CD.err=String(e.message||e);nt.hidden=false;nt.textContent="Connectivity not available: "+CD.err;console.error("connectivity:",e)}
+ finally{CD.busy=false;lxKey="";draw()}}
+const dayOf=d=>Math.round((Date.parse(d)-Date.parse(CI.d0))/864e5);   // index of a date in the connectivity series
+function cumState(){if(!CD.ready||!ready())return null;const t=dayOf(dates()[ti]);if(t<0||t>=CD.n)return null;
+ return{t,s:+$("conper").value?Math.max(0,dayOf(dates()[ti].slice(0,4)+"-01-01")):0,st:CD.n+1}}
+const cumSpan=()=>`${+$("conper").value?dates()[ti].slice(0,4)+"-01-01":CI.d0} – ${dates()[ti]}`;
+const cumCell=(S,i)=>CD.PR[i*S.st+S.t+1]-CD.PR[i*S.st+S.s],cumSent=(S,i)=>CD.PS[i*S.st+S.t+1]-CD.PS[i*S.st+S.s];
+const cumPair=(S,k)=>{const o=k*S.st;return[CD.PA[o+S.t+1]-CD.PA[o+S.s],CD.PB[o+S.t+1]-CD.PB[o+S.s],CD.PH[o+S.t+1]-CD.PH[o+S.s]]};   // a->b (b receives), b->a, hours
+function cumColor(v,alpha){const sc=CI.cscale[+$("conper").value],f=v<=sc[0]?0:Math.log(v/sc[0])/Math.log(sc[1]/sc[0]);return`rgba(${rampRGB(CUMPAL,f)},${alpha})`}
+const cumW=v=>{const m=CI.pscale[+$("conper").value];return v>0?.5+3.3*Math.log10(1+v)/Math.log10(1+m):0};
+function cellBay(i){const B_=CI.bay,y=+dates()[ti].slice(0,4),k=CI.bay_years.indexOf(y);if(!B_||!B_[i])return"";const f=+$("conper").value&&k>=0?B_[i][k+1]:B_[i][0];
+ return f==null?"":`\njoined to Hynes Bay through its neighbours ${pct(f)} of hours ${+$("conper").value&&k>=0?"in "+y:"2010–2026"}`}
+const mday=v=>(v<0.01?v.toFixed(4):v<10?v.toFixed(2):v<1000?v.toFixed(1):Math.round(v).toLocaleString("en-US"))+" m·day";
+const dys=h=>(h/24).toFixed(h<24*30?1:0)+" days";
+function connCells(){if(!CD.ready){loadConn();return}const S=cumState();if(!S)return;
+ CELLS.forEach((c,i)=>{if(i==BA.bay)return;ctx.fillStyle=cumColor(cumCell(S,i),.78);path(c);ctx.fill()})}
+function connLines(){const S=cumState();if(!S)return;const L=[];
+ CONN.forEach((c,k)=>{const [va,vb]=cumPair(S,k),tot=va+vb;if(tot>1e-9)L.push([tot,va,vb,c])});
+ L.sort((x,y)=>x[0]-y[0]);ctx.lineCap="round";
+ for(const [tot,va,vb,c] of L){const a=P(c.p[0][0],c.p[0][1]),b=P(c.p[1][0],c.p[1][1]),w=cumW(tot);
+  ctx.setLineDash(c.open?[]:[Math.max(4,2.2*w),Math.max(3,1.6*w)]);ctx.lineCap=c.open?"round":"butt";
+  ctx.beginPath();ctx.moveTo(a[0],a[1]);ctx.lineTo(b[0],b[1]);ctx.strokeStyle="rgba(255,255,255,.55)";ctx.lineWidth=w+1.5;ctx.stroke();ctx.strokeStyle="rgba(169,50,38,.9)";ctx.lineWidth=w;ctx.stroke();ctx.setLineDash([]);
+  if(Math.abs(va-vb)>.25*tot){const f=va>vb?1:-1,ang=Math.atan2((b[1]-a[1])*f,(b[0]-a[0])*f),z=3.2+w*.55;   // net direction: towards the cell that received more
+   ctx.save();ctx.translate((a[0]+b[0])/2,(a[1]+b[1])/2);ctx.rotate(ang);ctx.beginPath();ctx.moveTo(z,0);ctx.lineTo(-z*.8,-z*.75);ctx.lineTo(-z*.8,z*.75);ctx.closePath();
+   ctx.fillStyle="#fff";ctx.fill();ctx.lineWidth=1;ctx.strokeStyle="#5b1a13";ctx.stroke();ctx.restore()}}
+ ctx.lineCap="butt"}
+let ARTM=[];
+function occupied(){const o=[],box=(x,y,w,h)=>o.push([x,y,w,h]);
+ if($("lbl").checked&&110574/(fit.s*view.k)<25){ctx.font="600 11px system-ui";for(const c of CELLS){const q=P(c.cx,c.cy),w=ctx.measureText(c.id).width+6;box(q[0]-w/2,q[1]-8,w,16)}}
+ if($("L_st").checked){ctx.font="600 11px system-ui";for(const t of STN){const q=P(t.lon,t.lat);box(q[0]-8,q[1]-8,16,16);box(q[0]+9,q[1]-7,ctx.measureText(t.short).width+4,14)}}
+ if($("L_in").checked&&INF){const q=P(INF.point.lon,INF.point.lat);box(q[0]-9,q[1]-9,190,18)}
+ if(kind()=="icm"&&$("L_ctd").checked)for(const s of CTS){const q=P(s.lon,s.lat);box(q[0]-8,q[1]-8,60,16)}
+ if($("L_ins").checked)for(const s of INS){const q=P(s.lon,s.lat);box(q[0]-8,q[1]-8,80,16)}
+ if($("L_dig").checked)for(const d of DIGS){const m=P(d.mid[0],d.mid[1]);box(m[0]-5,m[1]-5,10,10)}   // dig midpoint dots
+ return o}
+function digLines(){ctx.lineJoin="round";ctx.lineCap="round";
+ for(const rec of[false,true])for(const d of DIGS){if(d.rec!=rec)continue;polyline(d.xy);ctx.strokeStyle="rgba(20,26,23,.8)";ctx.lineWidth=rec?5.5:3.4;ctx.stroke();ctx.strokeStyle=rec?DIGC:DIGO;ctx.lineWidth=rec?3.2:1.6;ctx.stroke();
+  const m=P(d.mid[0],d.mid[1]);ctx.beginPath();ctx.arc(m[0],m[1],rec?3.6:2.6,0,7);ctx.fillStyle=rec?DIGC:DIGO;ctx.fill();ctx.lineWidth=1.2;ctx.strokeStyle="rgba(20,26,23,.85)";ctx.stroke()}
+ ctx.lineCap="butt"}
+function digLabels(){const boxes=occupied().concat(ARTM.map(([x,y])=>[x-8,y-8,16,16])),W=innerWidth,H=innerHeight;   // clear of points, cell numbers, marks and each otherctx.textBaseline="middle";ctx.lineJoin="round";
+ for(const rec of[true,false])for(const d of DIGS.slice().sort((x,y)=>x.rank-y.rank)){if(d.rec!=rec)continue;const m=P(d.mid[0],d.mid[1]);if(m[0]<-40||m[1]<-20||m[0]>W+40||m[1]>H+20)continue;
+  ctx.font=rec?"700 11px system-ui":"500 10px system-ui";const w=ctx.measureText(d.id).width+4,h=12;let spot=null;
+  for(const [dx,dy] of [[7,-9],[7,9],[-7-w,-9],[-7-w,9],[-w/2,-15],[-w/2,15]]){const bx=[m[0]+dx,m[1]+dy-h/2,w,h];if(!boxes.some(o=>bx[0]<o[0]+o[2]&&o[0]<bx[0]+bx[2]&&bx[1]<o[1]+o[3]&&o[1]<bx[1]+bx[3])){spot=bx;break}}
+  if(!spot)continue;boxes.push(spot);ctx.textAlign="left";ctx.strokeStyle="rgba(255,255,255,.92)";ctx.lineWidth=3;ctx.fillStyle=rec?"#8a3b00":"#5d4a2e";
+  ctx.strokeText(d.id,spot[0]+2,spot[1]+h/2);ctx.fillText(d.id,spot[0]+2,spot[1]+h/2)}}
+// cells 56 / 57 are not ICM compartments: their runoff is the freshwater inflow into cell 52 at point.kml (INF)
+const XC=INF?INF.polys:[],xcell=i=>XC.find(p=>p.id==i)||null,dayK=()=>INF?Math.round((Date.parse(dates()[ti])-Date.parse(INF.d0))/864e5):-1;
+const yrK=()=>INF?INF.years.indexOf(+dates()[ti].slice(0,4)):-1,m3=v=>v>=1e6?(v/1e6).toFixed(2)+" million m³":Math.round(v/1e3).toLocaleString("en-US")+" thousand m³";
+function basins(){if(!INF)return;for(const p of XC){path(p);ctx.fillStyle="rgba(27,111,179,.22)";ctx.fill()}}
+function extraCells(){if(!INF||!$("outl").checked)return;ctx.lineJoin="round";for(const p of XC){path(p);ctx.setLineDash([]);ctx.strokeStyle="rgba(255,255,255,.55)";ctx.lineWidth=2.6;ctx.stroke();
+ ctx.setLineDash([7,4]);ctx.strokeStyle="rgba(16,22,19,.9)";ctx.lineWidth=1.2;ctx.stroke();ctx.setLineDash([])}}
+function inflowPoints(){if(!INF)return;const p=INF.point,q=P(p.lon,p.lat);ctx.beginPath();ctx.arc(q[0],q[1],7,0,7);ctx.fillStyle="#1b6fb3";ctx.fill();ctx.lineWidth=2;ctx.strokeStyle="#fff";ctx.stroke();
+ const k=dayK(),v=k>=0&&k<INF.q.length?INF.q[k]:null,t=`freshwater inflow cell 56–57 → cell 52${v==null?"":" · "+v.toFixed(3)+" m³/s"}`;
+ ctx.font="700 12px system-ui";ctx.textAlign="left";ctx.textBaseline="middle";ctx.lineJoin="round";ctx.strokeStyle="rgba(255,255,255,.92)";ctx.lineWidth=3;ctx.fillStyle="#0e3d66";ctx.strokeText(t,q[0]+11,q[1]);ctx.fillText(t,q[0]+11,q[1])}
+function inflowText(cell){const k=dayK(),y=yrK(),M=INF.mean,d=dates()[ti];let t="";
+ if(cell==null)t=`Freshwater inflow cell 56–57 → cell 52 (runoff of ${(XC[0].ha+XC[1].ha).toFixed(1)} ha)`;
+ else{const p=xcell(cell);t=`Cell ${cell} · ${p.ha} ha · freshwater inflow cell 56–57 → cell 52`+(cell==57?"\ndrains into cell 56, then into cell 52":"\ndrains into cell 52")}
+ if(k>=0&&k<INF.q.length)t+=`\n${d}: rain ${INF.p[k].toFixed(1)} mm · flow ${(cell==57?INF.q57[k]:INF.q[k]).toFixed(3)} m³/s`+(cell==57?" (57 → 56)":" into cell 52");
+ if(y>=0){const yy=INF.years[y],part=yy==INF.years[INF.years.length-1]&&INF.last?` (to ${INF.last})`:"",rain=cell==56?INF.rain_m3_56[y]:cell==57?INF.rain_m3_57[y]:INF.rain_m3[y];
+  t+=`\n${yy}${part}: rain on ${cell==null?"cells 56 + 57":"the cell"} ${m3(rain)} · inflow to cell 52 ${m3(INF.in_m3[y])} (${(100*INF.in_m3[y]/INF.rain_m3[y]).toFixed(0)}% of the rain on 56 + 57)\nmean flow ${INF.qmean[y].toFixed(3)} m³/s · largest day ${INF.qmax[y].toFixed(2)} m³/s (${INF.qmax_date[y]})`}
+ return t+`\nmean 2010–2025: rain ${m3(M.rain_m3)}/yr · inflow ${m3(M.in_m3)}/yr (${M.share}%) · ${M.q.toFixed(3)} m³/s; largest day ${M.qmax} m³/s (${M.qmax_date})\nclick the cell for the daily flow`}
+function xcellAt(x,y){if(!INF)return null;const q=inv(x,y);for(const p of XC)if(inRings(q[0],q[1],p.rings))return p.id;return null}
+const segD=(x,y,a,b)=>{const dx=b[0]-a[0],dy=b[1]-a[1],l=dx*dx+dy*dy;let t=l?((x-a[0])*dx+(y-a[1])*dy)/l:0;t=t<0?0:t>1?1:t;return Math.hypot(x-a[0]-t*dx,y-a[1]-t*dy)};
+function lineD(x,y,pts){let a=P(pts[0][0],pts[0][1]),m=Math.hypot(x-a[0],y-a[1]);for(let k=1;k<pts.length;k++){const b=P(pts[k][0],pts[k][1]);m=Math.min(m,segD(x,y,a,b));a=b}return m}
+function inRings(lon,lat,rings){let ins=false;for(const r of rings)for(let i=0,j=r.length-1;i<r.length;j=i++){const [xi,yi]=r[i],[xj,yj]=r[j];if((yi>lat)!=(yj>lat)&&lon<(xj-xi)*(lat-yi)/(yj-yi)+xi)ins=!ins}return ins}
+const pct=f=>f==null?"–":(f*100).toFixed(f>0&&f<.001?2:1)+"%",Mm=v=>v==null?"–":Math.abs(v)<0.1?Math.abs(v).toFixed(3):Math.abs(v).toFixed(2),mm=v=>v==null?"–":v.toFixed(2)+" m";
+const ha=v=>v==null?"–":v.toFixed(1)+" ha",cellName=i=>i==BA.bay?"10 (bay)":String(i);
+// CTD gauges 2026 (Solinst LTC): daily means of the cleaned hourly data; site A was picked up on 5 Aug
+const ctdK=s=>Math.round((Date.parse(dates()[ti])-Date.parse(CTD.d0))/864e5),ctdV=(s,a,k)=>k>=0&&k<s[a].length?s[a][k]:null;
+function ctdPoints(){ctx.font="600 11px system-ui";ctx.textAlign="left";ctx.textBaseline="middle";ctx.lineJoin="round";
+ for(const s of CTS){const q=P(s.lon,s.lat),r=6.5;ctx.beginPath();ctx.moveTo(q[0],q[1]-r);ctx.lineTo(q[0]+r,q[1]);ctx.lineTo(q[0],q[1]+r);ctx.lineTo(q[0]-r,q[1]);ctx.closePath();
+  ctx.fillStyle=s.col;ctx.fill();ctx.lineWidth=selCtd===s&&sel===s.cell?3:2;ctx.strokeStyle=selCtd===s&&sel===s.cell?"#141a17":"#fff";ctx.stroke();
+  const t="CTD "+s.id;ctx.strokeStyle="rgba(255,255,255,.92)";ctx.lineWidth=3;ctx.fillStyle="#141a17";ctx.strokeText(t,q[0]+10,q[1]);ctx.fillText(t,q[0]+10,q[1])}}
+const INS=[{name:"Aquadopp",k:"aq",lon:-96.869327,lat:28.469242},{name:"CTD",k:"ctd",lon:-96.867026,lat:28.467109},{name:"CTD",k:"ctd",lon:-96.859330,lat:28.455503}];
+function insMark(s,q,g){const r=6;g.beginPath();if(s.k=="aq")g.rect(q[0]-r+1,q[1]-r+1,2*r-2,2*r-2);else{g.moveTo(q[0],q[1]-r);g.lineTo(q[0]+r,q[1]);g.lineTo(q[0],q[1]+r);g.lineTo(q[0]-r,q[1]);g.closePath()}}
+function insPoints(){ctx.font="600 11px system-ui";ctx.textAlign="left";ctx.textBaseline="middle";ctx.lineJoin="round";
+ for(const s of INS){const q=P(s.lon,s.lat);insMark(s,q,ctx);ctx.fillStyle=s.k=="aq"?"#7b3fa0":"#9aa3a0";ctx.fill();ctx.lineWidth=2;ctx.strokeStyle="#fff";ctx.stroke();
+  const t=s.name;ctx.strokeStyle="rgba(255,255,255,.92)";ctx.lineWidth=3;ctx.fillStyle="#141a17";ctx.strokeText(t,q[0]+10,q[1]);ctx.fillText(t,q[0]+10,q[1])}}
+function insHit(x,y){if(!$("L_ins").checked)return null;ctx.font="600 11px system-ui";for(const s of INS){const q=P(s.lon,s.lat),w=ctx.measureText(s.name).width;if(Math.hypot(q[0]-x,q[1]-y)<10||(x>=q[0]+6&&x<=q[0]+14+w&&Math.abs(y-q[1])<=9))return s}return null}
+function ctdHit(x,y){if(!CTD||kind()!="icm"||!$("L_ctd").checked)return null;ctx.font="600 11px system-ui";for(const s of CTS){const q=P(s.lon,s.lat),w=ctx.measureText("CTD "+s.id).width;if(Math.hypot(q[0]-x,q[1]-y)<10||(x>=q[0]+6&&x<=q[0]+14+w&&Math.abs(y-q[1])<=9))return s}return null}
+function ctdText(s){const k=ctdK(s),sa=ctdV(s,"sal",k),de=ctdV(s,"dep",k),m=I.vars.salinity[ti][s.cell];
+ let t=`${s.name} · in model cell ${s.cell}\n${dates()[ti]}: `+(sa==null&&de==null?`no CTD data on this day (${s.span})`:
+  `salinity ${sa==null?"–":sa.toFixed(1)+" ppt"} (model ${m==null?"–":(+m).toFixed(1)}) · water above the sensor ${de==null?"–":de.toFixed(2)+" m"}`);
+ return t+"\nclick for the CTD and the model in one chart"}
+function extraHit(x,y){
+ {const s=ctdHit(x,y);if(s)return ctdText(s)}
+ {const s=insHit(x,y);if(s)return`${s.name=="CTD"?"CTD gauge":"Aquadopp current meter"} · location only, no data yet\n${s.lat.toFixed(5)}, ${s.lon.toFixed(5)}`}
+ if($("L_in").checked&&INF){const q=P(INF.point.lon,INF.point.lat);if(Math.hypot(q[0]-x,q[1]-y)<10)return inflowText(null)}
+ if($("L_dig").checked){let best=null,bd=8;for(const d of DIGS){const m=P(d.mid[0],d.mid[1]),dd=Math.min(lineD(x,y,d.xy),Math.hypot(m[0]-x,m[1]-y))-(d.rec?1.5:0);if(dd<bd){bd=dd;best=d}}   // a recommended dig (drawn on top, wider) wins where a candidate shares its path (e.g. D06 inside PD141)
+  if(best){const d=best,j=d.jb==null?"joins the bay: – (no tidal gain)":`joins the bay at ${mm(d.jb)} → ${mm(d.ja)} · hours connected ${d.hb==null?"–":(+d.hb).toFixed(1)}% → ${d.ha==null?"–":(+d.ha).toFixed(1)}%`;
+   return`${d.id} · ${d.group} · ${d.rec?"recommended":"not in the recommended set"} (overall rank ${d.rank})\ndig ${d.len} m${d.path>d.len+1?` (path ${d.path} m)`:""} · sill ${mm(d.sill)} → bed ${mm(d.bed)} · cells ${d.cells.split(" ").join(", ")}\n${j}\ngain at P50 ${ha(d.g50)} · at P10 ${ha(d.g10)} · time-averaged ${d.gtl!=null&&d.gth!=null&&d.gth-d.gtl>=.05?d.gtl.toFixed(1)+"–"+d.gth.toFixed(1)+" ha":ha(d.gt)}`}}
+ if($("L_con").checked&&CD.ready){const S=cumState();if(S){let best=-1,bd=1e9;CONN.forEach((c,k)=>{const [va,vb]=cumPair(S,k),tot=va+vb;if(tot<=1e-9)return;
+   const p0=P(c.p[0][0],c.p[0][1]),p1=P(c.p[1][0],c.p[1][1]),dx=p1[0]-p0[0],dy=p1[1]-p0[1],L2=dx*dx+dy*dy,tt=L2?((x-p0[0])*dx+(y-p0[1])*dy)/L2:0;
+   if(tt<.2||tt>.8)return;const dd=segD(x,y,p0,p1)-cumW(tot)/2;if(dd<bd){bd=dd;best=k}});   // the line ends sit on the cell numbers: leave them to the cell tooltip
+  if(best>=0&&bd<4){const c=CONN[best],[va,vb,hrs]=cumPair(S,best);
+   return`Cells ${cellName(c.a)} – ${cellName(c.b)} · ${c.con} · sill ${mm(c.sill)}\n${cumSpan()}: connected ${dys(hrs)} · depth over the connection summed ${mday(va+vb)}\nreceived by ${cellName(c.b)}: ${mday(va)} · by ${cellName(c.a)}: ${mday(vb)}`}}}
+ {const xc=xcellAt(x,y);if(xc!=null)return inflowText(xc)}   // cells 56 / 57 are always on the map
+ return null}
+// ---------------- decorations ----------------
+function stations(){if(!$("L_st").checked)return;ctx.font="600 11px system-ui";ctx.textAlign="left";ctx.textBaseline="middle";ctx.lineJoin="round";
+ for(const s of STN){const q=P(s.lon,s.lat);ctx.beginPath();ctx.arc(q[0],q[1],6,0,7);ctx.fillStyle=ORGC[s.org]||"#333";ctx.fill();ctx.lineWidth=2;ctx.strokeStyle="#fff";ctx.stroke();
+  ctx.strokeStyle="rgba(255,255,255,.92)";ctx.lineWidth=3;ctx.fillStyle="#141a17";ctx.strokeText(s.short,q[0]+10,q[1]);ctx.fillText(s.short,q[0]+10,q[1])}}
+function stHit(x,y){if(!$("L_st").checked)return null;for(const s of STN){const q=P(s.lon,s.lat);if(Math.hypot(q[0]-x,q[1]-y)<9)return s}return null}
+function scalebar(W,H){const mpp=110574/(fit.s*view.k);let L=50;for(const n of[50,100,200,500,1000,2000,5000,10000,20000])if(n/mpp<=140)L=n;const px=L/mpp,x=W-24-px,y=H-22,t=L>=1000?L/1000+" km":L+" m";
+ ctx.lineJoin="round";ctx.beginPath();ctx.moveTo(x,y-5);ctx.lineTo(x,y);ctx.lineTo(x+px,y);ctx.lineTo(x+px,y-5);ctx.strokeStyle="rgba(255,255,255,.85)";ctx.lineWidth=4;ctx.stroke();ctx.strokeStyle="#1d2320";ctx.lineWidth=2;ctx.stroke();
+ ctx.font="11px system-ui";ctx.textAlign="center";ctx.textBaseline="alphabetic";ctx.strokeStyle="rgba(255,255,255,.9)";ctx.lineWidth=3;ctx.strokeText(t,x+px/2,y-8);ctx.fillStyle="#1d2320";ctx.fillText(t,x+px/2,y-8)}
+const fmt=(v,s)=>{const r=s.hi-s.lo;return r<3?v.toFixed(2):r<20?v.toFixed(1):v.toFixed(0)};
+function legend(){const c=$("lbar"),Vv=V(),ar=arrowVar(),w=ar?176:118,h=ar?118:(["L_dig","L_con","L_in"].some(id=>$(id).checked)?140:196);c.width=w*dpr;c.height=h*dpr;c.style.width=w+"px";c.style.height=h+"px";
+ const g=c.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);g.font="11px system-ui";g.textBaseline="middle";legendExtra();
+ c.style.display=monOn()?"none":"";if(monOn()){const M=monVar();$("ltitle").textContent=`${M.title} (${M.unit.replace(/ /g,"\u00a0")})`;$("lnote").hidden=true;return}
+ $("ltitle").textContent=`${Vv.name}${kind()=="schism"&&cur=="salinity"&&!isStatic()?", "+LAYER[layer]:""} (${Vv.unit.replace(/ /g,"\u00a0")})`;
+ const hid=!$("L_mod").checked,ln=$("lnote"),nt=hid?`not shown: tick “${$("L_modlbl").textContent}” in the panel`:(isStatic()&&Vv.note)||"";
+ ln.hidden=!nt;ln.textContent=nt;ln.classList.toggle("off",hid);c.classList.toggle("off",hid);
+ if(cur=="flow"){[[0.01,"0.01"],[0.1,"0.1"],[1,"1"],[5,"5"]].forEach(([v,t],k)=>{const y=12+k*22,m=mag(v);arrow(g,34,y,0,6+9*m,1+1.2*m,"#123b5e");g.fillStyle="#1d2320";g.fillText(t,78,y)});
+  g.fillStyle="#69736d";g.fillText("dark: channel · green: over marsh",0,h-8);return}
+ if(cur=="currents"){[[0.02,"0.02"],[0.1,"0.1"],[0.25,"0.25"],[0.5,"0.5"]].forEach(([v,t],k)=>{const y=12+k*22;arrow(g,30,y,0,curLen(v),1.3,"#123b5e");g.fillStyle="#1d2320";g.fillText(t,78,y)});
+  g.fillStyle="#69736d";g.fillText("daily mean, wet area shaded",0,h-8);return}
+ const s=st(),L=lut(s.pal),bh=h-16,bw=16;for(let i=0;i<bh;i++){const k=Math.round(255*(1-i/(bh-1)));g.fillStyle=`rgb(${L[k*3]},${L[k*3+1]},${L[k*3+2]})`;g.fillRect(0,8+i,bw,1)}
+ g.strokeStyle="rgba(0,0,0,.3)";g.strokeRect(.5,8.5,bw,bh-1);g.fillStyle="#1d2320";
+ for(let k=0;k<=5;k++){const v=s.lo+(s.hi-s.lo)*k/5,y=8+bh-1-(bh-1)*k/5;g.fillRect(bw,Math.round(y),4,1);g.fillText(fmt(v,s),bw+8,y)}}
+const sw=(col,w,dash,cas)=>{const a=` stroke-linecap="${dash?"butt":"round"}"${dash?` stroke-dasharray="${dash}"`:""}`;return`<svg width="28" height="10"><line x1="2" y1="5" x2="26" y2="5" stroke="${cas||"rgba(20,26,23,.75)"}" stroke-width="${w+2}"${a}/><line x1="2" y1="5" x2="26" y2="5" stroke="${col}" stroke-width="${w}"${a}/></svg>`};
+let lxKey="";
+function legendExtra(){const on=id=>$(id).checked,per=+$("conper").value,rdig=on("L_rel")&&$("lidar").value=="dig"&&!!LD.cb&&!(isStatic()&&on("L_mod")&&cur!="elevd"),
+ key=[on("L_dig"),on("L_con"),per,on("L_in"),on("L_ctd")&&kind()=="icm",on("L_ins"),selCtd&&sel===selCtd.cell?selCtd.id:"",rdig,on("L_con")&&ready()?dates()[ti]:"",CD.ready,CD.err,monOn()?$("monvar").value+monIdx():""].join();if(key==lxKey)return;lxKey=key;let h="";
+ if(monOn()){const M=monVar(),j=monIdx(),bx=c=>`<svg width="20" height="13"><rect x="1" y="1" width="16" height="11" fill="${c}" stroke="rgba(0,0,0,.35)"/></svg>`;
+  h+=`<div class="lx mon"><b>${j<0?"no monthly map for this date":MON.month_labels[j]}</b>`+M.cols.map((c,k)=>bx(c)+M.labels[k]).concat(M.bay_col?[bx(M.bay_col)+"Hynes Bay"]:[]).map(x=>`<span class="mrow">${x}</span>`).join("")+`</div>`}
+ if(rdig)h+=`<div class="lx"><b>Relief: corrected lidar + proposed digs</b><span style="color:var(--mut)">proposal, not built: ${LD.DG.ids.length} recommended corridors<br>burned in at their target bed (zoom in to see them)</span></div>`;
+ if(on("L_dig")&&DIGS.length){const D=LAY.digs,g=D.set_gain;h+=`<div class="lx"><b>Proposed creek digs</b>${sw(DIGC,3.2)}recommended (${DIGS.filter(d=>d.rec).length}${D.len_rec?", "+D.len_rec+" m":""})<br>${sw(DIGO,1.6)}other candidates (${DIGS.filter(d=>!d.rec).length})`+
+  (g?`<br><span style="color:var(--mut)">set: +${g.P10} ha joined at P10, +${g.P50} ha at P50</span>`:"")+`</div>`}
+ if(on("L_con")&&CI){const sc=CI.cscale[per],gw=164,ticks=[];for(let e=Math.round(Math.log10(sc[0]));e<=Math.round(Math.log10(sc[1]));e++)ticks.push(10**e);
+  const x=v=>6+gw*Math.log(v/sc[0])/Math.log(sc[1]/sc[0]),stops=CUMPAL.map(([f,c])=>`<stop offset="${f*100}%" stop-color="${c}"/>`).join("");
+  h+=`<div class="lx"><b>Cumulative connectivity (m·day)</b><span style="color:var(--mut)">${ready()?cumSpan():CI.starts[per]}</span><br>`+
+   `<svg width="${gw+30}" height="30"><defs><linearGradient id="cumg">${stops}</linearGradient></defs><rect x="6" y="2" width="${gw}" height="10" fill="url(#cumg)" stroke="rgba(0,0,0,.25)"/>`+
+   ticks.map(v=>`<line x1="${x(v)}" y1="12" x2="${x(v)}" y2="15" stroke="#69736d"/><text x="${x(v)}" y="26" font-size="10" text-anchor="middle" fill="#69736d">${v>=1?v.toLocaleString("en-US"):v}</text>`).join("")+`</svg><br>`+
+   `<span style="color:var(--mut)">every hour two neighbouring cells are joined, the depth of<br>water over the low point between them is added to the cell<br>the water moves into (level: half each); summed over all<br>neighbours · 0.3 m for 10 days = 3 m·day</span><br>`+
+   `${sw("#a93226",2.5)}open-water channel ${sw("#a93226",2.5,"5 3")}over the marsh<br><span style="color:var(--mut)">width: the pair's sum · arrow: where one way clearly dominates</span>`+
+   (CD.err?`<br><span style="color:#b2182b">${CD.err}</span>`:!CD.ready?`<br><span style="color:var(--mut)">loading…</span>`:"")+`</div>`}
+ if(on("L_in")&&INF)h+=`<div class="lx"><b>Freshwater inflow</b><svg width="16" height="14"><circle cx="8" cy="7" r="5.5" fill="#1b6fb3" stroke="#fff" stroke-width="1.8"/></svg>inflow point into cell 52<br><svg width="16" height="12"><rect x="1" y="2" width="14" height="9" fill="rgba(27,111,179,.22)" stroke="#141a17" stroke-width="1.2" stroke-dasharray="4 2"/></svg>cells 56, 57: rain → runoff<br><span style="color:var(--mut)">mean 2010–2025: ${m3(INF.mean.in_m3)}/yr, ${INF.mean.q.toFixed(3)} m³/s</span></div>`;
+ if(on("L_ctd")&&CTD&&kind()=="icm")h+=`<div class="lx"><b>CTD gauges 2026</b>`+CTS.map((c,i)=>`<button class="ctdb${selCtd===c&&sel===c.cell?" on":""}" data-i="${i}"><svg width="16" height="14"><path d="M8 1.5 L14 7 L8 12.5 L2 7 Z" fill="${c.col}" stroke="#fff" stroke-width="1.6"/></svg>${c.id} · ${c.what} (cell ${c.cell})</button>`).join("")+
+  `<span style="color:var(--mut)">click a gauge here or on the map: measured vs model, Jun – Nov 2026</span></div>`;
+ if(on("L_ins"))h+=`<div class="lx"><b>Other instruments</b><svg width="16" height="14"><rect x="3" y="2" width="10" height="10" fill="#7b3fa0" stroke="#fff" stroke-width="1.6"/></svg>Aquadopp<br><svg width="16" height="14"><path d="M8 1.5 L14 7 L8 12.5 L2 7 Z" fill="#9aa3a0" stroke="#fff" stroke-width="1.6"/></svg>CTD<br><span style="color:var(--mut)">locations only, no data yet</span></div>`;
+ $("lextra").innerHTML=h}
+// ---------------- time series ----------------
+const CH={L:38,R:8,w:0,n:0,i0:0,series:[],dec:1};
+function chart(){const c=$("chart"),w=c.clientWidth||740,h=150;c.width=w*dpr;c.height=h*dpr;const g=c.getContext("2d");g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+ const D=dates(),n=D.length;let series=[],label="",note="",dec=2,i0=0;   // series are drawn in order: the model line goes last, on top
+ if(sel=="all"&&kind()=="icm"){const avg=r=>{let s=0,n=0;r.forEach((v,i)=>{if(i!=BA.bay&&v!=null){s+=v;n++}});return n?s/n:null};
+  if(monOn()){const M=monVar(),mi=D.map(d=>MON.months.indexOf(d.slice(0,7)));dec=M.dec;
+   if(!M.bay_col)series.push({a:mi.map(m=>m<0?null:M.v[m][MON.bay]),col:"#f28e2b",lw:1.1,short:"Hynes Bay",name:"Hynes Bay · monthly mean"});
+   series.push({a:mi.map(m=>m<0?null:avg(M.v[m])),col:"#1f6f5c",lw:1.8,short:"marsh",name:"All marsh cells · mean, monthly"});
+   label=`All marsh cells · ${M.title.toLowerCase()} (${M.unit})`;note="Mean of the marsh cells (Hynes Bay not included). Click a cell or a CTD gauge on the map for its own chart."}
+  else{const k=cur=="flow"?"salinity":cur,Vv=VARS.icm[k],arr=I.vars[k=="depth"?"depth":Vv.key];dec=Vv.dec;
+   if(k=="salinity")series.push({a:arr.map(r=>r[BA.bay]),col:"#f28e2b",lw:1.1,short:"Hynes Bay",name:"Hynes Bay · bay boundary"});
+   series.push({a:arr.map(avg),col:"#1f6f5c",lw:1.7,short:"marsh",name:"All marsh cells · mean"});
+   label=`All marsh cells · ${Vv.name.toLowerCase()} (${Vv.unit})`;note="Mean of the marsh cells (Hynes Bay not included). Click a cell or a CTD gauge on the map for its own chart."}}
+ else if(monOn()&&typeof sel=="number"&&sel<CELLS.length){const M=monVar(),mi=D.map(d=>MON.months.indexOf(d.slice(0,7))),per=a=>mi.map(m=>m<0?null:a(m)),cs=CTD&&selCtd&&selCtd.cell===sel?selCtd:null,vn=$("monvar").value;dec=M.dec;
+  if(!M.bay_col&&sel!=MON.bay)series.push({a:per(m=>M.v[m][MON.bay]),col:"#f28e2b",lw:1.1,short:"Hynes Bay",name:"Hynes Bay · monthly mean"});
+  if(cs&&vn=="salinity"){const k0=Math.round((Date.parse(D[0])-Date.parse(CTD.d0))/864e5),sm={},sn={};D.forEach((d,i)=>{const v=ctdV(cs,"sal",i+k0),m=d.slice(0,7);if(v!=null){sm[m]=(sm[m]||0)+v;sn[m]=(sn[m]||0)+1}});
+   series.push({a:D.map(d=>{const m=d.slice(0,7);return sn[m]?sm[m]/sn[m]:null}),col:cs.col,lw:1.9,short:`CTD ${cs.id}`,name:`CTD ${cs.id} · measured, monthly mean`});i0=Math.max(0,D.indexOf(CTD.from.slice(0,7)+"-01"))}
+  series.push({a:per(m=>M.v[m][sel]),col:"#1f6f5c",lw:1.8,short:`cell ${CELLS[sel].id}`,name:`Cell ${CELLS[sel].id} · model, monthly`});
+  label=`${cs?`CTD ${cs.id} (${cs.what}) and model cell`:"Cell"} ${CELLS[sel].id} · ${M.title.toLowerCase()} (${M.unit})`;note=`Monthly maps: one value per cell and month, ${MON.month_labels[0]} – ${MON.month_labels[MON.months.length-1]}; the colors on the map are the classes in the legend.`}
+ else if(kind()=="icm"&&$("L_con").checked&&CD.ready&&typeof sel=="number"&&sel<CELLS.length&&sel!=BA.bay){const yrS=+$("conper").value,o=sel*(CD.n+1);dec=2;let s0=0,yp="";
+  const t0=dayOf(D[0]);series.push({a:D.map((d,i)=>{const t=t0+i;if(t<0||t>=CD.n)return null;if(yrS&&d.slice(0,4)!=yp){yp=d.slice(0,4);s0=Math.max(0,dayOf(yp+"-01-01"))}return CD.PR[o+t+1]-CD.PR[o+s0]}),
+   col:"#225ea8",lw:1.7,short:`cell ${CELLS[sel].id}`,name:`Cell ${CELLS[sel].id} · cumulative connectivity, ${CI.starts[yrS]}`});
+  label=`Cell ${CELLS[sel].id} · cumulative connectivity (m·day)`;note=`Water depth over the connections the cell received from all its neighbours, summed over every hour they were connected: steep = often connected, flat = cut off. Steps are storms and high water, e.g. Hurricane Harvey 26 Aug 2017 and TS Alberto 20 Jun 2024. The model runs to ${D[n-1]}.`}
+ else if(kind()=="icm"&&xcell(sel)){const k0=Math.round((Date.parse(D[0])-Date.parse(INF.d0))/864e5),a=sel==57?INF.q57:INF.q;dec=3;
+  series.push({a:D.map((_,i)=>{const j=i+k0;return j>=0&&j<a.length?a[j]:null}),col:"#1b6fb3",lw:1.5,short:`cell ${sel}`,name:sel==57?"flow from cell 57 into cell 56":"freshwater inflow cell 56–57 → cell 52"});
+  label=`Cell ${sel} · runoff flow (m³/s)`;note="Rain on the cells runs off (SCS curve number 84, adjusted for antecedent rain) and is delayed by two linear reservoirs (57 → 56 → cell 52)."}
+ else if(kind()=="icm"){const k=cur=="flow"?"salinity":cur,Vv=VARS.icm[k],arr=I.vars[k=="depth"?"depth":Vv.key];dec=Vv.dec;const cs=CTD&&selCtd&&selCtd.cell===sel?selCtd:null;
+  if(k=="salinity")series.push({a:arr.map(r=>r[BA.bay]),col:"#f28e2b",lw:1.1,short:"Hynes Bay",name:"Hynes Bay · bay boundary (DELT measurements; estimated from river flow after Jun 2023)"});
+  series.push({a:arr.map(r=>r[sel]),col:"#1f6f5c",lw:1.7,short:`cell ${CELLS[sel].id}`,name:`Cell ${CELLS[sel].id} · model`});
+  label=`Cell ${CELLS[sel].id} · ${Vv.name.toLowerCase()} (${Vv.unit})`;
+  if(cs){const k0=Math.round((Date.parse(D[0])-Date.parse(CTD.d0))/864e5),key=k=="salinity"?"sal":k=="temperature"?"tmp":"dep",c=D.map((_,i)=>ctdV(cs,key,i+k0));
+   i0=Math.max(0,D.indexOf(CTD.from));let sh=0,nm=`CTD ${cs.id} · measured, daily mean`;
+   if(k=="stage"){let a=0,b=0,m=0;c.forEach((v,i)=>{const mv=arr[i][sel];if(v!=null&&mv!=null){a+=mv;b+=v;m++}});sh=m?(a-b)/m:0;nm=`CTD ${cs.id} · water above the sensor, shifted to the model mean (+${sh.toFixed(2)} m; sensor elevation not surveyed)`}
+   else if(k=="depth")nm=`CTD ${cs.id} · water above the sensor, daily mean`;
+   series.push({a:c.map(v=>v==null?null:v+sh),col:cs.col,lw:1.9,short:`CTD ${cs.id}`,name:nm});
+   label=`CTD ${cs.id} (${cs.what}) and model cell ${CELLS[sel].id} · ${Vv.name.toLowerCase()} (${Vv.unit})`;
+   note=`CTD ${cs.ctd}, site ${cs.id}: Solinst LTC, hourly, barometrically compensated and cleaned (hours out of the water and dropouts removed); daily mean of the hours in the water. ${cs.span}.`}}
+ else{const k=sel.k;dec=1;
+  if(cur=="salinity"){series.push({a:D.map((_,t)=>sval("sal_b",k,t)),col:"#c77d2e",lw:1.2,short:"bottom",name:"bottom"});series.push({a:D.map((_,t)=>sval("sal_s",k,t)),col:"#1f6f5c",lw:1.6,short:"surface",name:"surface"});label="Salinity (psu)"}
+  else{const key=cur=="currents"?"depth":qkey(),Vv=cur=="currents"?VARS.schism.depth:V();series.push({a:D.map((_,t)=>sval(key,k,t)),col:"#1f6f5c",lw:1.6,short:Vv.name.toLowerCase(),name:Vv.name});label=`${Vv.name} (${Vv.unit})`}
+  label=`Point ${sel.lat.toFixed(4)}, ${sel.lon.toFixed(4)} · `+label}
+ const nw=n-i0;let lo=Infinity,hi=-Infinity;for(const s of series)for(let i=i0;i<n;i++){const v=s.a[i];if(v!=null){lo=Math.min(lo,v);hi=Math.max(hi,v)}}if(!(hi>lo)){lo=isFinite(lo)?lo:0;hi=lo+1}
+ const L=38,R=8,T=6,Bm=18,X=i=>L+(w-L-R)*(i-i0)/Math.max(1,nw-1),Y=v=>T+(h-T-Bm)*(1-(v-lo)/(hi-lo));
+ g.font="10px system-ui";g.fillStyle="#69736d";g.strokeStyle="#e4e7e3";g.lineWidth=1;g.textAlign="right";
+ for(let q=0;q<=4;q++){const v=lo+(hi-lo)*q/4,y=Y(v);g.beginPath();g.moveTo(L,y);g.lineTo(w-R,y);g.stroke();g.fillText(v.toFixed(hi-lo<3?2:1),L-4,y+3)}
+ xaxis(g,D.slice(i0),j=>X(j+i0),h,T,Bm);
+ for(const s of series){g.strokeStyle=s.col;g.lineWidth=s.lw;g.beginPath();let on=false;s.a.forEach((v,i)=>{if(i<i0||v==null){on=false;return}const x=X(i),y=Y(v);on?g.lineTo(x,y):(g.moveTo(x,y),on=true)});g.stroke()}
+ if(ti>=i0){const xc=X(ti);g.strokeStyle="#e4572e";g.fillStyle="#e4572e";g.lineWidth=1.5;g.beginPath();g.moveTo(xc,T);g.lineTo(xc,h-Bm);g.stroke();
+ g.beginPath();g.moveTo(xc-5,T-2);g.lineTo(xc+5,T-2);g.lineTo(xc,T+5);g.closePath();g.fill()}
+ Object.assign(CH,{L,R,w,n:nw,i0,series,dec});$("stitle").textContent=label+` · ${monOn()&&monIdx()>=0?MON.month_labels[monIdx()]:D[ti]}`;
+ $("slegend").innerHTML=series.slice().reverse().map(s=>`<i class="sw" style="background:${s.col}"></i>${s.name}`).join("");$("snote").textContent=note;$("snote").hidden=!note}
+function xaxis(g,D,X,h,T,Bm){const n=D.length,ppd=(X(n-1)-X(0))/Math.max(1,n-1);g.fillStyle="#69736d";g.textAlign="center";g.strokeStyle="#eef0ed";g.lineWidth=1;
+ if(n>540){const st=[];D.forEach((d,i)=>{if(i==0||d.slice(0,4)!=D[i-1].slice(0,4))st.push(i)});const every=Math.max(1,Math.ceil(40/(365*ppd)));   // one label per year, centred on the year
+  st.forEach((i,j)=>{if(j>0){g.beginPath();g.moveTo(X(i),T);g.lineTo(X(i),h-Bm);g.stroke()}const e=j+1<st.length?st[j+1]:n;if(j%every||e-i<90)return;g.fillText(D[i].slice(0,4),(X(i)+X(e-1))/2,h-4)})}
+ else{const every=Math.max(1,Math.ceil(50/(30.4*ppd)));let m=0;D.forEach((d,i)=>{if(i==0||d.endsWith("-01")){if(m++%every==0)g.fillText(d.slice(0,7),X(i),h-4)}})}}
+// the time cursor can be clicked or dragged inside the chart; hovering shows the date and values
+const chartIndex=e=>{const r=$("chart").getBoundingClientRect();return (CH.i0||0)+Math.max(0,Math.min(CH.n-1,Math.round((e.clientX-r.left-CH.L)/(CH.w-CH.L-CH.R)*(CH.n-1))))};
+function chartTip(e){const i=chartIndex(e),tp=$("tip");tp.textContent=(monOn()?dates()[i].slice(0,7):dates()[i])+" · "+CH.series.slice().reverse().map(s=>`${s.short} ${s.a[i]==null?"–":(+s.a[i]).toFixed(CH.dec)}`).join(" · ");
+ tp.style.display="block";tp.style.left=Math.max(8,Math.min(innerWidth-8-tp.offsetWidth,e.clientX+14))+"px";tp.style.top=(e.clientY-32)+"px"}
+let cdrag=false;
+$("chart").addEventListener("mousedown",e=>{if(!ready()||!CH.n)return;cdrag=true;ti=chartIndex(e);draw();chartTip(e);e.preventDefault()});
+$("chart").addEventListener("mouseleave",()=>{if(!cdrag)$("tip").style.display="none"});
+// ---------------- hit testing ----------------
+function hit(x,y){const q=inv(x,y);
+ if(kind()=="schism"){const g=SC.g,c=Math.floor((q[0]-g.lon0)/(g.lon1-g.lon0)*g.w),r=Math.floor((g.lat1-q[1])/(g.lat1-g.lat0)*g.h);if(c<0||r<0||c>=g.w||r>=g.h)return null;
+  const k=SC.rev[r*g.w+c];return k<0?null:{k,lon:q[0],lat:q[1],bed:SC.bed[k]/100}}
+ const c=Math.floor((q[0]-G.lon0)/(G.lon1-G.lon0)*RW),r=Math.floor((G.lat1-q[1])/(G.lat1-G.lat0)*RH);if(c<0||r<0||c>=RW||r>=RH)return null;
+ const id=CID[r*RW+c];return id===255?null:{i:id,z:Z[r*RW+c]/1000-1}}
+function cellAt(x,y){const q=inv(x,y),c=Math.floor((q[0]-G.lon0)/(G.lon1-G.lon0)*RW),r=Math.floor((G.lat1-q[1])/(G.lat1-G.lat0)*RH);if(c<0||r<0||c>=RW||r>=RH)return null;const id=CID[r*RW+c];return id===255?null:id}
+function placeTip(e){const tp=$("tip"),w=tp.offsetWidth,h=tp.offsetHeight;   // open to the left / upwards near the right / bottom edge
+ tp.style.left=(e.clientX+14+w>innerWidth-8?Math.max(8,e.clientX-14-w):e.clientX+14)+"px";tp.style.top=(e.clientY+14+h>innerHeight-8?Math.max(8,e.clientY-10-h):e.clientY+14)+"px"}
+function groundTxt(g){return`ground: original ${g.orig.toFixed(2)} m · corrected ${g.v3.toFixed(2)} m`+(g.d?` (${g.d>0?"+":""}${g.d.toFixed(2)})`:"")+
+ (g.dig?`\nwith proposed dig ${g.dig.id} (proposal): ${g.dig.z.toFixed(2)} m (2 m block mean; dig bed ${g.dig.bed.toFixed(2)} m)`:"")}
+function hover(e){const tp=$("tip"),onMap=e.target===cv,sh=onMap?stHit(e.clientX,e.clientY):null;
+ const show=t=>{tp.textContent=t;tp.style.display="block";placeTip(e)};
+ if(sh)return show(`${sh.name}: ${sh.what}`);
+ if(!onMap||!ready()){tp.style.display="none";return}
+ const ex=extraHit(e.clientX,e.clientY);if(ex)return show(ex);
+ const q=inv(e.clientX,e.clientY),gd=lidarAt(q[0],q[1]);
+ if(isStatic()){if(!gd){tp.style.display="none";return}const ci=cellAt(e.clientX,e.clientY);return show((ci!=null?`cell ${ci} · `:"")+groundTxt(gd))}
+ const h=hit(e.clientX,e.clientY);if(!h){if(gd)return show(groundTxt(gd));tp.style.display="none";return}let t="";const cS=$("L_con").checked&&h.i!=BA.bay&&kind()=="icm"?cumState():null;
+ if(monOn()){const j=monIdx(),M=monVar(),v=j<0?null:M.v[j][h.i];t=`cell ${CELLS[h.i].id} · ${M.title.toLowerCase()}${j<0?"":", "+MON.month_labels[j]}: ${h.i==MON.bay&&M.bay_col?"bay":v==null?"–":(+v).toFixed(M.dec)+" "+M.unit}`+(gd?"\n"+groundTxt(gd):"")}
+ else if(kind()=="icm"){const k=cur=="flow"?"salinity":cur,Vv=VARS.icm[k],v=k=="depth"?Math.max(0,I.vars.stage[ti][h.i]-h.z):I.vars[Vv.key][ti][h.i];
+  t=`cell ${CELLS[h.i].id} · ${Vv.name.toLowerCase()} ${v==null?"–":(+v).toFixed(Vv.dec)} ${Vv.unit}`+(gd?"\n"+groundTxt(gd):` · ground ${h.z.toFixed(2)} m`)+
+   (cS?`\ncumulative connectivity ${cumSpan()}: received ${mday(cumCell(cS,h.i))} · gave ${mday(cumSent(cS,h.i))}`+cellBay(h.i):"")}
+ else{const d=sval("depth",h.k,ti);if(cur=="salinity"||cur=="temperature"){const v=sval(qkey(),h.k,ti);t=`${V().name.toLowerCase()} ${v==null?"dry":v.toFixed(1)+" "+V().unit}`}
+  else t="water depth "+(d==null?"dry":d.toFixed(2)+" m");t+=` · bed ${h.bed.toFixed(2)} m`+(gd?"\n"+groundTxt(gd):"")}
+ show(t)}
+let drag=null;
+let selBefore=null;
+cv.addEventListener("mousedown",e=>{if(e.detail<2)selBefore=sel;drag={x:e.clientX,y:e.clientY,vx:view.x,vy:view.y,moved:false};cv.classList.add("drag");$("tip").style.display="none"});
+addEventListener("mousemove",e=>{lastMove=e;if(cdrag){ti=chartIndex(e);draw();chartTip(e);return}if(e.target===$("chart")&&CH.n&&!drag){chartTip(e);return}if(drag){const dx=e.clientX-drag.x,dy=e.clientY-drag.y;if(Math.abs(dx)+Math.abs(dy)>3)drag.moved=true;if(drag.moved){view.x=drag.vx+dx;view.y=drag.vy+dy;draw()}return}hover(e)});
+$("lextra").addEventListener("click",e=>{const b=e.target.closest(".ctdb");if(!b||!ready())return;const s=CTS[+b.dataset.i];selCtd=s;sel=s.cell;draw()});
+addEventListener("mouseup",e=>{cdrag=false;if(!drag)return;cv.classList.remove("drag");if(!drag.moved&&ready()){const cs=ctdHit(e.clientX,e.clientY),h=hit(e.clientX,e.clientY),xc=kind()=="icm"?xcellAt(e.clientX,e.clientY):null;selCtd=cs;sel=cs?cs.cell:h?(kind()=="icm"?h.i:h):xc;draw()}drag=null});
+cv.addEventListener("wheel",e=>{e.preventDefault();const k=Math.min(40,Math.max(.06,view.k*Math.exp(-e.deltaY*.0015))),r=k/view.k;view.x=e.clientX-(e.clientX-view.x)*r;view.y=e.clientY-(e.clientY-view.y)*r;view.k=k;draw()},{passive:false});
+cv.addEventListener("dblclick",()=>{sel=selBefore;view={k:1,x:0,y:0};draw()});cv.addEventListener("mouseleave",()=>$("tip").style.display="none");   // a double-click only resets the view: undo the cell pick of its first click
+// ---------------- controls ----------------
+for(const d of DS)$("model").add(new Option(d.label,d.id));for(const p of Object.keys(PALS))$("pal").add(new Option(p,p));
+function setupVars(){const s=$("var");s.innerHTML="";for(const [k,Vv] of Object.entries(VARS[kind()]))s.add(new Option(Vv.name,k));
+ if(!VARS[kind()][cur])cur="salinity";s.value=cur;   // the static lidar maps are not offered (the relief checkbox still shows the lidar)
+ $("layerrow").hidden=!(kind()=="schism"&&cur=="salinity");$("t").max=dates().length-1;$("foot").textContent=(kind()=="icm"?I.meta:SC.W.meta);digOptions()}
+function syncSettings(){const dis=arrowVar(),stat=isStatic();for(const id of["lo","hi","pal","auto"])$(id).disabled=dis;$("paint").hidden=$("paintlbl").hidden=kind()!="icm"||stat;
+ $("autolbl").textContent=stat?"Auto range (map)":"Auto range (this day)";$("speed").hidden=$("speedlbl").hidden=stat;if(dis)return;const s=st();$("lo").value=s.lo;$("hi").value=s.hi;$("pal").value=s.pal;$("auto").checked=s.auto}
+function pickDate(d0,pref){const D=dates();let j=d0?D.indexOf(d0):-1;if(j<0)for(const p of pref){j=D.indexOf(p);if(j>=0)break}if(j<0)j=d0&&d0<D[0]?0:D.length-1;ti=j}
+$("model").onchange=e=>{const d=DS.find(x=>x.id==e.target.value),prev=ds,d0=ready()?dates()[ti]:null;ds=d;
+ loadDS(d,()=>{sel=null;$("series").hidden=true;if(kind()=="schism"&&cur=="flow")cur="currents";if(kind()=="icm"&&cur=="currents")cur="flow";pickDate(d0,["2018-11-15","2011-08-15"]);setupVars();draw()},
+ ()=>{ds=prev;$("model").value=prev.id})};
+$("var").onchange=e=>{cur=e.target.value;if(isStatic()&&timer)play();$("layerrow").hidden=!(kind()=="schism"&&cur=="salinity");draw()};$("layer").onchange=e=>{layer=e.target.value;draw()};
+$("lo").onchange=e=>{st().lo=+e.target.value;st().auto=false;draw()};$("hi").onchange=e=>{st().hi=+e.target.value;st().auto=false;draw()};
+$("pal").onchange=e=>{st().pal=e.target.value;draw()};$("auto").onchange=e=>{st().auto=e.target.checked;if(!e.target.checked){st().lo=V().lo;st().hi=V().hi}draw()};
+for(const id of["paint","outl","lbl","L_sat","L_rel","L_mod","L_st","lidar","L_dig","L_con","conper","L_ctd","L_ins","L_mon","monvar"])$(id).onchange=draw;
+if(CI){CI.starts.forEach((p,k)=>$("conper").add(new Option(p,k)));$("conper").value="1"}   // default: summed since 1 Jan of the year shown
+if(!DIGS.length)$("L_dig").disabled=true;if(!CONN.length)$("L_con").disabled=true;if(!INF)$("L_in").disabled=true;if(!CTD)$("L_ctd").disabled=true;if(!MON)$("L_mon").disabled=true;if(!BA.layers)$("lay2").hidden=true;
+function fitTo(pts,rpad){const W=innerWidth,H=innerHeight,left=310,top=60,bot=$("series").hidden?H-60:$("series").getBoundingClientRect().top-16;let x0=1e9,x1=-1e9,y0=1e9,y1=-1e9;   // fit points and the marsh, right of the panel and above an open chart
+ for(const s of pts.concat([{lon:B.lon0,lat:B.lat0},{lon:B.lon1,lat:B.lat1}])){const px=fit.x+(s.lon-B.lon0)*cosl*fit.s,py=fit.y+(B.lat1-s.lat)*fit.s;x0=Math.min(x0,px);x1=Math.max(x1,px);y0=Math.min(y0,py);y1=Math.max(y1,py)}
+ const k=Math.min((W-left-rpad)/(x1-x0),(bot-top)/(y1-y0));view.k=k;view.x=left+(W-left-rpad)/2+20-(x0+x1)/2*k;view.y=(top+bot)/2-(y0+y1)/2*k;draw()}
+$("fitst").onclick=()=>fitTo(STN,$("legend").offsetWidth+160);   // keep the station names clear of the legend
+$("L_in").onchange=()=>{if(!$("L_in").checked||!INF)return draw();const pts=[{lon:INF.point.lon,lat:INF.point.lat}];for(const p of INF.polys)for(const r of p.rings)for(const v of r)pts.push({lon:v[0],lat:v[1]});
+ legend();const lr=$("legend").getBoundingClientRect();   // the legend grows with the inflow entry: measure it first
+ const seen=pts.every(p=>{const q=P(p.lon,p.lat);return q[0]>310&&q[0]<innerWidth&&q[1]>0&&q[1]<innerHeight&&!(q[0]>lr.left-8&&q[1]<lr.bottom+8)});seen?draw():fitTo(pts,lr.width+24)};   // bring the basins into view when they are off screen or under the legend
+$("op").oninput=draw;$("t").oninput=e=>{ti=+e.target.value;draw()};
+const step=d=>{if(isStatic())return;if(monOn()){monStep(d);draw();return}ti=Math.min(dates().length-1,Math.max(0,ti+d));draw()};$("prev").onclick=$("sprev").onclick=()=>step(-1);$("next").onclick=$("snext").onclick=()=>step(1);
+function play(){if(timer){clearInterval(timer);timer=null;$("play").textContent=$("splay").textContent="▶"}else if(!isStatic()){timer=setInterval(()=>{if(monOn())monStep(1,true);else ti=(ti+1)%dates().length;draw()},+$("speed").value);$("play").textContent=$("splay").textContent="❚❚"}}
+$("play").onclick=$("splay").onclick=play;$("speed").onchange=()=>{if(timer){play();play()}};$("sclose").onclick=()=>{sel=null;$("series").hidden=true;draw()};
+addEventListener("keydown",e=>{if(e.target.tagName=="INPUT"||e.target.tagName=="SELECT")return;if(e.code=="Space"){e.preventDefault();play()}else if(e.key=="ArrowLeft")step(-1);else if(e.key=="ArrowRight")step(1)});
+addEventListener("resize",resize);hs.onload=draw;
+document.addEventListener("visibilitychange",()=>{if(!document.hidden)draw()});addEventListener("focus",draw);   // repaint tiles that arrived while the tab was hidden
+loadDS(ds,()=>{pickDate(null,[]);sel="all";setupVars();resize();setTimeout(loadLidar,300)});   // the fine lidar loads in the background
+</script>
